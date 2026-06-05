@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+frontend/.next/
+frontend/out/
+backend/dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Serverless
+.serverless/

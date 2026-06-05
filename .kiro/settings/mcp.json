@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sui": {
+      "url": "https://sui.mcp.kapa.ai",
+      "disabled": false
+    }
+  }
+}

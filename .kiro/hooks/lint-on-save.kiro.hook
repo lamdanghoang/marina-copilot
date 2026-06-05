@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Lint on Save",
+  "description": "Runs ESLint when a TypeScript file is saved in frontend or backend",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.ts",
+      "**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx eslint --fix ${file}"
+  }
+}
