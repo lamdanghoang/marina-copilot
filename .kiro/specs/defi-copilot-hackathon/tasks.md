@@ -8,7 +8,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
 
 ## Tasks
 
-- [ ] 1. Project scaffolding with separate FE/BE (Day 1)
+- [x] 1. Project scaffolding with separate FE/BE (Day 1)
   - [x] 1.1 Initialize monorepo with frontend and backend projects
     - Create `frontend/` directory: Next.js 14 app with App Router, TypeScript strict, Tailwind CSS
     - Install frontend deps: `@mysten/dapp-kit`, `@mysten/sui`, `@tanstack/react-query`, `zustand`, `tailwindcss`, `shadcn/ui`
@@ -27,7 +27,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Create `backend/src/types/config.ts` with `TokenConfig` and `SUPPORTED_TOKENS` registry for Sui Testnet
     - _Requirements: 1.1, 1.2, 2.2, 3.3, 4.3, 4.4_
 
-  - [ ] 1.3 Implement wallet connection and balance display (Frontend)
+  - [x] 1.3 Implement wallet connection and balance display (Frontend)
     - Create `frontend/src/components/WalletButton.tsx` using `@mysten/dapp-kit` `ConnectButton`
     - Implement address truncation (first 4 + last 4 hex chars) and SUI balance formatting (2 decimal places)
     - Display connected wallet info in header
@@ -35,7 +35,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Handle wallet connection errors and disconnection events
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-  - [ ] 1.4 Create API client for frontend-to-backend communication
+  - [x] 1.4 Create API client for frontend-to-backend communication
     - Create `frontend/src/lib/api-client.ts` with methods: `processIntent()`, `remember()`, `healthCheck()`
     - Base URL from `NEXT_PUBLIC_API_URL` environment variable
     - Handle network errors, timeouts, and non-200 responses gracefully
@@ -45,14 +45,14 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 15: Wallet address truncation and balance formatting**
     - **Validates: Requirements 7.2**
 
-- [ ] 2. Chat interface and conversational UX — Frontend (Day 1-2)
+- [x] 2. Chat interface and conversational UX — Frontend (Day 1-2)
   - [x] 2.1 Create Zustand store for application state
     - Implement `CopilotStore` interface from design with all state slices and actions
     - Include wallet state, chat messages, processing state, current preview
     - Implement `sendMessage` (calls API client), `confirmTransaction`, `cancelPreview`, `connectWallet`, `disconnectWallet` actions
     - _Requirements: 10.1, 10.4, 10.6_
 
-  - [ ] 2.2 Build chat UI components
+  - [x] 2.2 Build chat UI components
     - Create `frontend/src/components/ChatMessage.tsx` with right-aligned user messages and left-aligned assistant messages with distinct backgrounds
     - Create `frontend/src/components/ChatInput.tsx` with input bar, Send button, Enter key submission
     - Create `frontend/src/components/TypingIndicator.tsx` with animated indicator and contextual status text
