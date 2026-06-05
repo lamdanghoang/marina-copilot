@@ -1,5 +1,6 @@
 // ============================================================
 // DeFi Copilot — Shared TypeScript Interfaces (Backend)
+// Full set of types for all backend services and API communication
 // ============================================================
 
 // --- Error Types ---
@@ -162,4 +163,45 @@ export interface MemoryContent {
   type: "preference" | "transaction";
   content: string;
   metadata?: Record<string, unknown>;
+}
+
+// --- Service Interfaces: Intent Parser ---
+
+export interface IntentParserInput {
+  message: string;
+  memories: MemoryRecord[];
+  balances: TokenBalance[];
+  conversationHistory: ChatMessage[];
+}
+
+export interface IntentParserOutput {
+  reasoning: string;
+  intent: StructuredIntent | null;
+  clarification: string | null;
+  riskFlags: {
+    slippageConcern: boolean;
+    concentrationConcern: boolean;
+    rationale: string;
+  };
+  memoryIndicator: string | null;
+}
+
+// --- Service Interfaces: PTB Compiler ---
+
+export interface PTBCompilerOutput {
+  transactionBytes: string;
+  metadata: TransactionMetadata;
+}
+
+// --- Service Interfaces: Guardian ---
+
+export interface GuardianInput {
+  intent: StructuredIntent;
+  metadata: TransactionMetadata;
+  portfolio: PortfolioBalance[];
+}
+
+export interface GuardianOutput {
+  assessment: "safe" | "warning" | "danger";
+  risks: RiskWarning[];
 }

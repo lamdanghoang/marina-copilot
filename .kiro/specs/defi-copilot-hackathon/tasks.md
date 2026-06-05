@@ -21,7 +21,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Configure Sui Testnet provider in frontend with `@mysten/dapp-kit`
     - _Requirements: 7.1_
 
-  - [ ] 1.2 Define shared TypeScript interfaces and types
+  - [x] 1.2 Define shared TypeScript interfaces and types
     - Create `backend/src/types/index.ts` with all interfaces from design: `ProcessIntentRequest`, `ProcessIntentResponse`, `StructuredIntent`, `SwapIntent`, `StakeIntent`, `ChatMessage`, `TokenBalance`, `RiskWarning`, `PTBStep`, `TransactionMetadata`, `PortfolioBalance`, `MemoryRecord`, `AppError`, `ErrorCode`
     - Create `frontend/src/types/index.ts` mirroring the same response/request interfaces
     - Create `backend/src/types/config.ts` with `TokenConfig` and `SUPPORTED_TOKENS` registry for Sui Testnet
@@ -46,7 +46,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Validates: Requirements 7.2**
 
 - [ ] 2. Chat interface and conversational UX — Frontend (Day 1-2)
-  - [ ] 2.1 Create Zustand store for application state
+  - [x] 2.1 Create Zustand store for application state
     - Implement `CopilotStore` interface from design with all state slices and actions
     - Include wallet state, chat messages, processing state, current preview
     - Implement `sendMessage` (calls API client), `confirmTransaction`, `cancelPreview`, `connectWallet`, `disconnectWallet` actions
