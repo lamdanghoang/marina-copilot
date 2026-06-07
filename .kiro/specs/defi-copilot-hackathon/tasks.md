@@ -179,8 +179,8 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 12: Non-swap transactions skip slippage check**
     - **Validates: Requirements 4.7**
 
-- [ ] 8. Orchestrator API and pipeline wiring — Backend (Day 4)
-  - [ ] 8.1 Implement orchestrator Express routes
+- [x] 8. Orchestrator API and pipeline wiring — Backend (Day 4)
+  - [x] 8.1 Implement orchestrator Express routes
     - Create `backend/src/routes/process-intent.ts` implementing `POST /api/process-intent`
     - Wire pipeline: recall memories → parse intent → compile PTB → serialize transaction → assess risks → return preview + transactionBytes
     - Handle clarification flow (return early when intent needs clarification)

@@ -1,6 +1,14 @@
+// ============================================================
+// DeFi Copilot — Express App Entry Point
+// Mounts all route handlers with CORS middleware
+// ============================================================
+
 import express from "express";
 import cors from "cors";
 import serverless from "serverless-http";
+import processIntentRouter from "./routes/process-intent";
+import rememberRouter from "./routes/remember";
+import healthRouter from "./routes/health";
 
 const app = express();
 
@@ -15,10 +23,10 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Health check endpoint
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: Date.now() });
-});
+// --- Routes ---
+app.use("/api/process-intent", processIntentRouter);
+app.use("/api/remember", rememberRouter);
+app.use("/api/health", healthRouter);
 
 // Local development server
 const PORT = process.env.PORT || 3001;
