@@ -554,6 +554,177 @@ describe("Guardian - assessRisks", () => {
     });
   });
 
+  describe("Cumulative concentration with transaction history (Task 14.2)", () => {
+    it("should flag concentration when cumulative exposure exceeds 70% with transaction history", () => {
+      // Current portfolio: SUI=400 (40%), USDC=300 (30%), WETH=300 (30%) — balanced
+      // But user has been buying SUI heavily in the last 30 days
+      const now = Date.now();
+      const memories = [
+        {
+          id: "tx1",
+          type: "transaction" as const,
+          content: "Swapped 400 USDC to SUI via Cetus",
+          timestamp: now - 5 * 24 * 60 * 60 * 1000, // 5 days ago
+          metadata: { action: "swap", tokens: ["USDC", "SUI"], amounts: [400], outcome: "success" },
+        },
+        {
+          id: "tx2",
+          type: "transaction" as const,
+          content: "Swapped 500 USDC to SUI via Cetus",
+          timestamp: now - 10 * 24 * 60 * 60 * 1000, // 10 days ago
+          metadata: { action: "swap", tokens: ["USDC", "SUI"], amounts: [500], outcome: "success" },
+        },
+        {
+          id: "tx3",
+          type: "transaction" as const,
+          content: "Swapped 300 USDC to SUI via Cetus",
+          timestamp: now - 15 * 24 * 60 * 60 * 1000, // 15 days ago
+          metadata: { action: "swap", tokens: ["USDC", "SUI"], amounts: [300], outcome: "success" },
+        },
+      ];
+
+      // Post-swap portfolio: after 100 USDC → SUI
+      // SUI: 400+100=500, USDC: 300-100=200, WETH: 300 → total=1000
+      // Historical SUI exposure: 400+500+300=1200
+      // Cumulative: (500 + 1200) / (1000 + 1200) = 1700/2200 ≈ 77.3% > 70%
+      const input: GuardianInput = {
+        intent: makeSwapIntent({ fromToken: "USDC", toToken: "SUI", amount: 100 }),
+        metadata: makeSwapMetadata({ priceImpact: 0.5, estimatedOutput: 25 }),
+        portfolio: [
+          { token: "SUI", balance: 100, valueUsd: 400 },
+          { token: "USDC", balance: 300, valueUsd: 300 },
+          { token: "WETH", balance: 0.1, valueUsd: 300 },
+        ],
+        memories,
+      };
+
+      const result = assessRisks(input);
+
+      const concentrationRisk = result.risks.find(
+        (r) => r.class === "CONCENTRATION"
+      );
+      expect(concentrationRisk).toBeDefined();
+      expect(concentrationRisk!.data.asset!.toUpperCase()).toBe("SUI");
+      expect(concentrationRisk!.data.resultingPercentage!).toBeGreaterThan(70);
+      expect(concentrationRisk!.explanation).toContain("recent transactions");
+    });
+
+    it("should NOT flag concentration when portfolio is balanced and no relevant history", () => {
+      const now = Date.now();
+      const memories = [
+        {
+          id: "tx1",
+          type: "transaction" as const,
+          content: "Swapped 50 USDC to SUI via Cetus",
+          timestamp: now - 5 * 24 * 60 * 60 * 1000,
+          metadata: { action: "swap", tokens: ["USDC", "SUI"], amounts: [50], outcome: "success" },
+        },
+      ];
+
+      const input: GuardianInput = {
+        intent: makeSwapIntent({ fromToken: "USDC", toToken: "SUI", amount: 10 }),
+        metadata: makeSwapMetadata({ priceImpact: 0.3, estimatedOutput: 2.5 }),
+        portfolio: [
+          { token: "SUI", balance: 100, valueUsd: 400 },
+          { token: "USDC", balance: 500, valueUsd: 500 },
+          { token: "WETH", balance: 0.1, valueUsd: 300 },
+        ],
+        memories,
+      };
+
+      const result = assessRisks(input);
+
+      const concentrationRisk = result.risks.find(
+        (r) => r.class === "CONCENTRATION"
+      );
+      expect(concentrationRisk).toBeUndefined();
+    });
+
+    it("should ignore transaction history older than 30 days", () => {
+      const now = Date.now();
+      const memories = [
+        {
+          id: "tx1",
+          type: "transaction" as const,
+          content: "Swapped 500 USDC to SUI via Cetus",
+          timestamp: now - 45 * 24 * 60 * 60 * 1000, // 45 days ago — outside window
+          metadata: { action: "swap", tokens: ["USDC", "SUI"], amounts: [500], outcome: "success" },
+        },
+      ];
+
+      const input: GuardianInput = {
+        intent: makeSwapIntent({ fromToken: "USDC", toToken: "SUI", amount: 10 }),
+        metadata: makeSwapMetadata({ priceImpact: 0.3, estimatedOutput: 2.5 }),
+        portfolio: [
+          { token: "SUI", balance: 100, valueUsd: 400 },
+          { token: "USDC", balance: 500, valueUsd: 500 },
+          { token: "WETH", balance: 0.1, valueUsd: 300 },
+        ],
+        memories,
+      };
+
+      const result = assessRisks(input);
+
+      // Without the old history, portfolio is balanced (SUI ~34%)
+      const concentrationRisk = result.risks.find(
+        (r) => r.class === "CONCENTRATION"
+      );
+      expect(concentrationRisk).toBeUndefined();
+    });
+
+    it("should ignore preference memories for concentration calculation", () => {
+      const now = Date.now();
+      const memories = [
+        {
+          id: "pref1",
+          type: "preference" as const,
+          content: "Preferred DEX: Cetus",
+          timestamp: now - 2 * 24 * 60 * 60 * 1000,
+          metadata: { category: "dex", value: "Cetus" },
+        },
+      ];
+
+      const input: GuardianInput = {
+        intent: makeSwapIntent({ fromToken: "USDC", toToken: "SUI", amount: 10 }),
+        metadata: makeSwapMetadata({ priceImpact: 0.3, estimatedOutput: 2.5 }),
+        portfolio: makeDiversifiedPortfolio(),
+        memories,
+      };
+
+      const result = assessRisks(input);
+
+      // No concentration risk since only preferences in memory (no tx history)
+      expect(result.assessment).toBe("safe");
+    });
+
+    it("should work correctly when memories array is empty", () => {
+      const input: GuardianInput = {
+        intent: makeSwapIntent(),
+        metadata: makeSwapMetadata({ priceImpact: 0.5, estimatedOutput: 25 }),
+        portfolio: makeDiversifiedPortfolio(),
+        memories: [],
+      };
+
+      const result = assessRisks(input);
+
+      expect(result.assessment).toBe("safe");
+      expect(result.risks).toEqual([]);
+    });
+
+    it("should work correctly when memories is undefined (backward compatible)", () => {
+      const input: GuardianInput = {
+        intent: makeSwapIntent(),
+        metadata: makeSwapMetadata({ priceImpact: 0.5, estimatedOutput: 25 }),
+        portfolio: makeDiversifiedPortfolio(),
+      };
+
+      const result = assessRisks(input);
+
+      expect(result.assessment).toBe("safe");
+      expect(result.risks).toEqual([]);
+    });
+  });
+
   describe("Edge cases", () => {
     it("should handle priceImpact of undefined gracefully", () => {
       const input: GuardianInput = {

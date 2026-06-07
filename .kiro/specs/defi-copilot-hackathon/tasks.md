@@ -253,8 +253,8 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 18: Memory indicator names applied preference**
     - **Validates: Requirements 8.5**
 
-- [ ] 14. Memory-aware intent parsing and smart defaults (Day 7)
-  - [ ] 14.1 Wire memory into orchestrator pipeline
+- [x] 14. Memory-aware intent parsing and smart defaults (Day 7)
+  - [x] 14.1 Wire memory into orchestrator pipeline
     - Call `MemoryService.recall()` before intent parsing in orchestrator
     - Pass recalled memories to Intent Parser for preference-based defaults
     - Display memory indicator in chat when preferences are applied (e.g. "Using Cetus (your preferred DEX)")
@@ -262,7 +262,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Handle fallback when preferred DEX has no route for requested pair
     - _Requirements: 8.3, 8.5, 9.1, 9.3, 9.4_
 
-  - [ ] 14.2 Implement cumulative concentration with transaction history
+  - [x] 14.2 Implement cumulative concentration with transaction history
     - Extend Guardian to consider recalled transaction history (last 30 days)
     - Calculate combined single-asset exposure factoring in prior transactions + pending transaction
     - Flag concentration warning when cumulative exposure exceeds 70%

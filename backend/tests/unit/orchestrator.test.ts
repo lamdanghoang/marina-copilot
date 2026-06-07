@@ -417,4 +417,108 @@ describe("POST /api/process-intent", () => {
     expect(body.type).toBe("error");
     expect(body.error.message).toContain("Something went wrong");
   });
+
+  it("includes memoryIndicator in preview response when preferences applied", async () => {
+    mockedParseIntent.mockResolvedValueOnce({
+      reasoning: "User wants to swap, using memory for DEX",
+      intent: { action: "swap", fromToken: "USDC", toToken: "SUI", amount: 100, dex: "Cetus" },
+      clarification: null,
+      riskFlags: { slippageConcern: false, concentrationConcern: false, rationale: "" },
+      memoryIndicator: "Using Cetus (your preferred DEX)",
+    });
+
+    mockedCompileSwap.mockResolvedValueOnce({
+      transactionBytes: "dHJhbnNhY3Rpb25CeXRlcw==",
+      metadata: {
+        type: "swap",
+        steps: [{ index: 1, description: "Swap 100 USDC → ~24.8 SUI via Cetus", type: "swap" }],
+        gasEstimate: 0.005,
+        route: ["USDC", "[Cetus]", "SUI"],
+        exchangeRate: 0.248,
+        estimatedOutput: 24.8,
+        minimumOutput: 24.55,
+        priceImpact: 0.3,
+      },
+    });
+
+    mockedAssessRisks.mockReturnValueOnce({
+      assessment: "safe",
+      risks: [],
+    });
+
+    const handler = getHandler(processIntentRouter);
+    const { res, promise } = makeRes();
+    const req = { body: baseRequest };
+
+    handler(req, res);
+    const result = await promise;
+
+    expect(result.status).toBe(200);
+    const body = result.body as { type: string; memoryIndicator: string };
+    expect(body.type).toBe("preview");
+    expect(body.memoryIndicator).toBe("Using Cetus (your preferred DEX)");
+  });
+
+  it("includes memoryIndicator in clarification response", async () => {
+    mockedParseIntent.mockResolvedValueOnce({
+      reasoning: "Need more info but recognizing memory",
+      intent: null,
+      clarification: "How much USDC would you like to swap?",
+      riskFlags: { slippageConcern: false, concentrationConcern: false, rationale: "" },
+      memoryIndicator: "Using Cetus (your preferred DEX)",
+    });
+
+    const handler = getHandler(processIntentRouter);
+    const { res, promise } = makeRes();
+    const req = { body: baseRequest };
+
+    handler(req, res);
+    const result = await promise;
+
+    expect(result.status).toBe(200);
+    const body = result.body as { type: string; memoryIndicator: string };
+    expect(body.type).toBe("clarification");
+    expect(body.memoryIndicator).toBe("Using Cetus (your preferred DEX)");
+  });
+
+  it("memoryIndicator is null when no preferences applied", async () => {
+    mockedParseIntent.mockResolvedValueOnce({
+      reasoning: "User wants to swap 100 USDC to SUI",
+      intent: { action: "swap", fromToken: "USDC", toToken: "SUI", amount: 100 },
+      clarification: null,
+      riskFlags: { slippageConcern: false, concentrationConcern: false, rationale: "" },
+      memoryIndicator: null,
+    });
+
+    mockedCompileSwap.mockResolvedValueOnce({
+      transactionBytes: "dHJhbnNhY3Rpb25CeXRlcw==",
+      metadata: {
+        type: "swap",
+        steps: [{ index: 1, description: "Swap 100 USDC → ~24.8 SUI via Cetus", type: "swap" }],
+        gasEstimate: 0.005,
+        route: ["USDC", "[Cetus]", "SUI"],
+        exchangeRate: 0.248,
+        estimatedOutput: 24.8,
+        minimumOutput: 24.55,
+        priceImpact: 0.3,
+      },
+    });
+
+    mockedAssessRisks.mockReturnValueOnce({
+      assessment: "safe",
+      risks: [],
+    });
+
+    const handler = getHandler(processIntentRouter);
+    const { res, promise } = makeRes();
+    const req = { body: baseRequest };
+
+    handler(req, res);
+    const result = await promise;
+
+    expect(result.status).toBe(200);
+    const body = result.body as { type: string; memoryIndicator: string | null };
+    expect(body.type).toBe("preview");
+    expect(body.memoryIndicator).toBeNull();
+  });
 });

@@ -90,6 +90,7 @@ router.post("/", async (req: Request, res: Response) => {
     if (!parserOutput.intent) {
       const response: ProcessIntentResponse = {
         type: "clarification",
+        memoryIndicator: parserOutput.memoryIndicator,
         clarification: {
           message: parserOutput.clarification || "Could you provide more details?",
         },
@@ -134,11 +135,13 @@ router.post("/", async (req: Request, res: Response) => {
       intent,
       metadata: compiledResult.metadata,
       portfolio,
+      memories,
     });
 
     // --- Step 6: Return preview ---
     const response: ProcessIntentResponse = {
       type: "preview",
+      memoryIndicator: parserOutput.memoryIndicator,
       preview: {
         steps: compiledResult.metadata.steps,
         metadata: compiledResult.metadata,

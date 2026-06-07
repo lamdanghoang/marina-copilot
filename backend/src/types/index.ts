@@ -129,6 +129,8 @@ export interface ProcessIntentRequest {
 
 export interface ProcessIntentResponse {
   type: "clarification" | "preview" | "error";
+  // Optional memory indicator shown when preferences are applied
+  memoryIndicator?: string | null;
   // When type = "clarification"
   clarification?: {
     message: string;
@@ -199,6 +201,7 @@ export interface GuardianInput {
   intent: StructuredIntent;
   metadata: TransactionMetadata;
   portfolio: PortfolioBalance[];
+  memories?: MemoryRecord[];
 }
 
 export interface GuardianOutput {

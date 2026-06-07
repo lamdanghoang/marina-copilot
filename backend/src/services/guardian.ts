@@ -11,6 +11,7 @@ import {
   StructuredIntent,
   PortfolioBalance,
   TransactionMetadata,
+  MemoryRecord,
 } from "@/types";
 
 /**
@@ -127,6 +128,155 @@ function calculatePostStakePortfolio(
 }
 
 /**
+ * Extract transaction history from the last 30 days from memory records.
+ * Returns records of type "transaction" within the 30-day window.
+ */
+function getRecentTransactionHistory(
+  memories: MemoryRecord[] | undefined,
+  nowMs: number = Date.now()
+): MemoryRecord[] {
+  if (!memories || memories.length === 0) return [];
+
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const cutoff = nowMs - thirtyDaysMs;
+
+  return memories.filter(
+    (m) => m.type === "transaction" && m.timestamp >= cutoff
+  );
+}
+
+/**
+ * Parse a transaction memory record to extract the token that was acquired (bought).
+ * Looks for patterns like "Swapped X USDC to SUI" or metadata with tokens/action info.
+ */
+function extractAcquiredToken(memory: MemoryRecord): string | null {
+  // First try metadata — most reliable
+  const meta = memory.metadata;
+  if (meta) {
+    // If action is "swap" and tokens array has [fromToken, toToken], the acquired token is toToken
+    if (meta.action === "swap" && Array.isArray(meta.tokens) && meta.tokens.length >= 2) {
+      return (meta.tokens[1] as string) || null;
+    }
+    // If action is "stake", the token stays the same (SUI → staked SUI)
+    if (meta.action === "stake") {
+      return null; // Staking doesn't change asset composition for concentration
+    }
+  }
+
+  // Fallback: parse content string for swap patterns
+  const content = memory.content;
+  // Pattern: "Swapped X TOKEN_A to TOKEN_B" or "swap X TOKEN_A → TOKEN_B"
+  const swapMatch = content.match(
+    /(?:swapped?|swap)\s+[\d.]+\s+\w+\s+(?:to|→|->)\s+(\w+)/i
+  );
+  if (swapMatch) {
+    return swapMatch[1].toUpperCase();
+  }
+
+  return null;
+}
+
+/**
+ * Calculate cumulative exposure from transaction history.
+ * Returns a map of token → estimated cumulative USD value acquired in last 30 days.
+ */
+function calculateHistoricalExposure(
+  transactionHistory: MemoryRecord[]
+): Map<string, number> {
+  const exposure = new Map<string, number>();
+
+  for (const tx of transactionHistory) {
+    const acquiredToken = extractAcquiredToken(tx);
+    if (!acquiredToken) continue;
+
+    // Try to get the USD value from metadata
+    let txValueUsd = 0;
+    const meta = tx.metadata;
+    if (meta && Array.isArray(meta.amounts) && meta.amounts.length >= 1) {
+      // Use the first amount as an approximation of value
+      // In real implementation this would use historical prices
+      txValueUsd = (meta.amounts[0] as number) || 0;
+    }
+
+    const current = exposure.get(acquiredToken.toUpperCase()) || 0;
+    exposure.set(acquiredToken.toUpperCase(), current + txValueUsd);
+  }
+
+  return exposure;
+}
+
+/**
+ * Check for concentration risk in a portfolio, considering cumulative historical exposure.
+ * Returns a RiskWarning if any single asset > 70% of total value when factoring in
+ * prior transactions from the last 30 days.
+ */
+function checkCumulativeConcentration(
+  portfolio: PortfolioBalance[],
+  memories: MemoryRecord[] | undefined
+): RiskWarning | null {
+  const totalValue = portfolio.reduce((sum, p) => sum + p.valueUsd, 0);
+  if (totalValue <= 0) return null;
+
+  // Get recent transaction history
+  const recentHistory = getRecentTransactionHistory(memories);
+
+  if (recentHistory.length === 0) {
+    // No history — fall back to standard concentration check
+    return checkConcentration(portfolio);
+  }
+
+  // Calculate cumulative exposure from history
+  const historicalExposure = calculateHistoricalExposure(recentHistory);
+
+  // Check if the current portfolio + historical pattern creates concentration
+  for (const entry of portfolio) {
+    const tokenUpper = entry.token.toUpperCase();
+    const currentPercentage = (entry.valueUsd / totalValue) * 100;
+
+    // Factor in historical exposure: if user has been consistently buying this token,
+    // the effective concentration is higher when considering the trend
+    const historicalValue = historicalExposure.get(tokenUpper) || 0;
+
+    // Cumulative concentration = current portfolio value + historical acquired value
+    // divided by total portfolio + historical total acquired
+    const historicalTotal = Array.from(historicalExposure.values()).reduce(
+      (sum, v) => sum + v,
+      0
+    );
+
+    let cumulativePercentage: number;
+    if (historicalTotal > 0) {
+      // Effective exposure: (current asset value + historical buys of this asset)
+      // divided by (total portfolio + total historical buys)
+      cumulativePercentage =
+        ((entry.valueUsd + historicalValue) / (totalValue + historicalTotal)) * 100;
+    } else {
+      cumulativePercentage = currentPercentage;
+    }
+
+    if (cumulativePercentage > 70) {
+      const explanation =
+        historicalValue > 0
+          ? `Considering your recent transactions, ${cumulativePercentage.toFixed(1)}% of your combined exposure is in ${entry.token}.`
+          : `After this trade, ${cumulativePercentage.toFixed(1)}% of your portfolio will be in ${entry.token}.`;
+
+      return {
+        class: "CONCENTRATION",
+        severity: getConcentrationSeverity(cumulativePercentage),
+        explanation,
+        suggestion: "Consider diversifying across multiple assets.",
+        data: {
+          resultingPercentage: Math.round(cumulativePercentage * 10) / 10,
+          asset: entry.token,
+        },
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
  * Check for concentration risk in a portfolio.
  * Returns a RiskWarning if any single asset > 70% of total value.
  */
@@ -162,10 +312,10 @@ function checkConcentration(
  * Assess risks for a given transaction intent.
  *
  * This is a PURE, DETERMINISTIC function — no async, no external calls, no LLM.
- * Uses data already available in the input (intent, metadata, portfolio).
+ * Uses data already available in the input (intent, metadata, portfolio, memories).
  */
 export function assessRisks(input: GuardianInput): GuardianOutput {
-  const { intent, metadata, portfolio } = input;
+  const { intent, metadata, portfolio, memories } = input;
   const risks: RiskWarning[] = [];
 
   // 1. Slippage check — only for swap transactions
@@ -232,7 +382,11 @@ export function assessRisks(input: GuardianInput): GuardianOutput {
     // Filter out zero-value entries
     const nonZeroPortfolio = postPortfolio.filter((p) => p.valueUsd > 0);
 
-    const concentrationRisk = checkConcentration(nonZeroPortfolio);
+    // Use cumulative concentration check when memories are available
+    const concentrationRisk = memories && memories.length > 0
+      ? checkCumulativeConcentration(nonZeroPortfolio, memories)
+      : checkConcentration(nonZeroPortfolio);
+
     if (concentrationRisk) {
       risks.push(concentrationRisk);
     }
