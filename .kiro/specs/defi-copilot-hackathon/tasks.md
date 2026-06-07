@@ -41,11 +41,11 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Handle network errors, timeouts, and non-200 responses gracefully
     - _Requirements: 12.1_
 
-  - [ ]* 1.5 Write property tests for wallet address formatting
+  - [x]* 1.5 Write property tests for wallet address formatting
     - **Property 15: Wallet address truncation and balance formatting**
     - **Validates: Requirements 7.2**
 
-- [ ] 2. Chat interface and conversational UX — Frontend (Day 1-2)
+- [x] 2. Chat interface and conversational UX — Frontend (Day 1-2)
   - [x] 2.1 Create Zustand store for application state
     - Implement `CopilotStore` interface from design with all state slices and actions
     - Include wallet state, chat messages, processing state, current preview
@@ -61,7 +61,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Validate non-empty message after trimming before submission
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
-  - [ ]* 2.3 Write property test for message input validation
+  - [x]* 2.3 Write property test for message input validation
     - **Property 19: Message input validation**
     - **Validates: Requirements 10.3**
 
@@ -84,23 +84,23 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Include memory indicator when preferences are applied
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 9.1, 12.1, 12.2, 12.3_
 
-  - [ ]* 3.3 Write property tests for intent parsing logic
+  - [x]* 3.3 Write property tests for intent parsing logic
     - **Property 1: Incomplete intent produces clarification naming all missing fields**
     - **Validates: Requirements 1.3**
 
-  - [ ]* 3.4 Write property tests for unknown token handling
+  - [x]* 3.4 Write property tests for unknown token handling
     - **Property 2: Unknown token produces error naming the unrecognized symbol**
     - **Validates: Requirements 1.6**
 
-  - [ ]* 3.5 Write property tests for memory preference defaults
+  - [x]* 3.5 Write property tests for memory preference defaults
     - **Property 3: Memory preferences become intent defaults without clarification**
     - **Validates: Requirements 1.5, 9.1**
 
-  - [ ]* 3.6 Write property tests for LLM context assembly
+  - [x]* 3.6 Write property tests for LLM context assembly
     - **Property 20: LLM context assembly completeness**
     - **Validates: Requirements 12.2**
 
-  - [ ]* 3.7 Write property tests for LLM response parsing
+  - [x]* 3.7 Write property tests for LLM response parsing
     - **Property 21: LLM response parsing produces valid structured output**
     - **Validates: Requirements 12.3**
 
@@ -120,19 +120,19 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Reserve gas when source token is SUI
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ]* 5.2 Write property tests for swap metadata completeness
+  - [x]* 5.2 Write property tests for swap metadata completeness
     - **Property 4: Compiled transaction metadata contains all required fields for its action type**
     - **Validates: Requirements 2.2, 3.3**
 
-  - [ ]* 5.3 Write property tests for insufficient balance error
+  - [x]* 5.3 Write property tests for insufficient balance error
     - **Property 5: Insufficient balance error includes available balance and required amount**
     - **Validates: Requirements 2.4, 3.4**
 
-  - [ ]* 5.4 Write property tests for default slippage calculation
+  - [x]* 5.4 Write property tests for default slippage calculation
     - **Property 6: Default slippage tolerance calculation**
     - **Validates: Requirements 2.5**
 
-- [ ] 6. PTB Compiler — Stake action, Backend (Day 3-4)
+- [x] 6. PTB Compiler — Stake action, Backend (Day 3-4)
   - [x] 6.1 Implement stake PTB compilation
     - Add `compileStake(intent, walletAddress)` method to PTB Compiler in `backend/src/services/ptb-compiler.ts`
     - Fetch active validators from Sui system state
@@ -144,7 +144,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Validate via `dryRunTransaction` on Sui Testnet
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ]* 6.2 Write property test for highest APY validator selection
+  - [x]* 6.2 Write property test for highest APY validator selection
     - **Property 7: Highest APY validator selection**
     - **Validates: Requirements 3.2**
 
@@ -159,23 +159,23 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Handle missing portfolio data gracefully (skip concentration check, proceed with slippage)
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8_
 
-  - [ ]* 7.2 Write property tests for Guardian slippage detection
+  - [x]* 7.2 Write property tests for Guardian slippage detection
     - **Property 8: Guardian slippage detection with data**
     - **Validates: Requirements 4.1, 4.3**
 
-  - [ ]* 7.3 Write property tests for Guardian concentration detection
+  - [x]* 7.3 Write property tests for Guardian concentration detection
     - **Property 9: Guardian concentration detection with data**
     - **Validates: Requirements 4.2, 4.4**
 
-  - [ ]* 7.4 Write property tests for risk warning completeness
+  - [x]* 7.4 Write property tests for risk warning completeness
     - **Property 10: All risk warnings contain explanation and suggestion**
     - **Validates: Requirements 4.5**
 
-  - [ ]* 7.5 Write property tests for safe assessment
+  - [x]* 7.5 Write property tests for safe assessment
     - **Property 11: No risks detected implies safe assessment**
     - **Validates: Requirements 4.6**
 
-  - [ ]* 7.6 Write property tests for non-swap transaction handling
+  - [x]* 7.6 Write property tests for non-swap transaction handling
     - **Property 12: Non-swap transactions skip slippage check**
     - **Validates: Requirements 4.7**
 
@@ -207,7 +207,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Cancel dismisses preview and returns to chat input
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
 
-  - [ ]* 10.2 Write property tests for preview rendering completeness
+  - [x]* 10.2 Write property tests for preview rendering completeness
     - **Property 13: Preview renders complete data for its response type**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.6**
 
@@ -223,7 +223,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Trigger memory store (call backend `/api/remember`) on successful transaction
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-  - [ ]* 11.2 Write property tests for success message formatting
+  - [x]* 11.2 Write property tests for success message formatting
     - **Property 14: Success message contains all required fields**
     - **Validates: Requirements 6.3**
 
@@ -241,15 +241,15 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Graceful degradation: proceed with empty memory on recall failure, silent failure on store failure
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.6, 11.1, 11.2, 11.3, 11.4_
 
-  - [ ]* 13.2 Write property tests for memory record completeness
+  - [x]* 13.2 Write property tests for memory record completeness
     - **Property 16: Memory record completeness on store**
     - **Validates: Requirements 8.1**
 
-  - [ ]* 13.3 Write property tests for preference overwrite semantics
+  - [x]* 13.3 Write property tests for preference overwrite semantics
     - **Property 17: Preference overwrite semantics**
     - **Validates: Requirements 8.2**
 
-  - [ ]* 13.4 Write property tests for memory indicator content
+  - [x]* 13.4 Write property tests for memory indicator content
     - **Property 18: Memory indicator names applied preference**
     - **Validates: Requirements 8.5**
 
@@ -268,7 +268,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Flag concentration warning when cumulative exposure exceeds 70%
     - _Requirements: 9.2_
 
-  - [ ]* 14.3 Write property test for cumulative concentration
+  - [x]* 14.3 Write property test for cumulative concentration
     - **Property 22: Cumulative concentration considers transaction history**
     - **Validates: Requirements 9.2**
 
@@ -318,7 +318,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Verify app works on Sui Testnet (swap executes, memory persists)
     - _Requirements: all_
 
-- [ ] 19. Final checkpoint - Production ready
+- [x] 19. Final checkpoint - Production ready
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
