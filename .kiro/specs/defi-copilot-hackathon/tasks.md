@@ -303,7 +303,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - _Requirements: 12.1_
 
 - [ ] 18. Polish and submission preparation (Day 9-10)
-  - [ ] 18.1 UI polish and loading states
+  - [x] 18.1 UI polish and loading states
     - Add contextual loading status text ("Parsing intent...", "Compiling transaction...", "Checking risks...")
     - Ensure all loading states transition smoothly
     - Add "Powered by Walrus Memory" indicator
@@ -311,7 +311,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Ensure end-to-end latency stays below 5 seconds
     - _Requirements: 10.2, 12.1_
 
-  - [ ] 18.2 Create README and submission assets
+  - [x] 18.2 Create README and submission assets
     - Write README.md with: setup instructions, architecture diagram, tech stack, demo link
     - Ensure no hardcoded secrets in repo
     - Set GitHub repo to public

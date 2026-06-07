@@ -55,15 +55,25 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
       statusText: "Parsing intent...",
     });
 
-    try {
-      set({ statusText: "Processing..." });
+    // Simulate progressive status updates during the single API call
+    const statusTimers: ReturnType<typeof setTimeout>[] = [];
+    statusTimers.push(
+      setTimeout(() => set({ statusText: "Compiling transaction..." }), 1500)
+    );
+    statusTimers.push(
+      setTimeout(() => set({ statusText: "Checking risks..." }), 3000)
+    );
 
+    try {
       const response = await processIntent({
         message,
         walletAddress,
         conversationHistory: [...messages, userMessage],
         balances,
       });
+
+      // Clear status timers on response
+      statusTimers.forEach(clearTimeout);
 
       const assistantMessage = buildAssistantMessage(response);
 
@@ -74,6 +84,9 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
         currentPreview: response.type === "preview" ? response.preview ?? null : null,
       }));
     } catch (error: unknown) {
+      // Clear status timers on error
+      statusTimers.forEach(clearTimeout);
+
       // Build user-friendly error message from API client error
       let errorContent = "I couldn't process that. Please try again.";
       let suggestion: string | undefined;

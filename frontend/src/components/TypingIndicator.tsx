@@ -14,7 +14,9 @@ export function TypingIndicator({ statusText }: TypingIndicatorProps) {
           <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
         </div>
         {statusText && (
-          <p className="mt-1.5 text-xs text-muted-foreground">{statusText}</p>
+          <p className="mt-1.5 text-xs text-muted-foreground transition-opacity duration-300 ease-in-out">
+            {statusText}
+          </p>
         )}
       </div>
     </div>

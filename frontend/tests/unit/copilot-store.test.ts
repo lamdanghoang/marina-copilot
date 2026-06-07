@@ -171,7 +171,7 @@ describe("CopilotStore", () => {
       const state = useCopilotStore.getState();
       expect(state.messages).toHaveLength(2);
       expect(state.messages[1].type).toBe("error");
-      expect(state.messages[1].content).toBe("I couldn't process that. Please try again.");
+      expect(state.messages[1].content).toBe("Network error");
       expect(state.isProcessing).toBe(false);
     });
 
