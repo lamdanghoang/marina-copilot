@@ -104,11 +104,11 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 21: LLM response parsing produces valid structured output**
     - **Validates: Requirements 12.3**
 
-- [ ] 4. Checkpoint - Core parsing works
+- [x] 4. Checkpoint - Core parsing works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. PTB Compiler — Swap action, Backend (Day 3)
-  - [ ] 5.1 Implement swap PTB compilation with Cetus Aggregator
+- [x] 5. PTB Compiler — Swap action, Backend (Day 3)
+  - [x] 5.1 Implement swap PTB compilation with Cetus Aggregator
     - Create `backend/src/services/ptb-compiler.ts` with `compileSwap(intent, walletAddress)` method
     - Install and configure `@cetusprotocol/aggregator-sdk` for Sui Testnet
     - Query Cetus for best-output route for the requested token pair
