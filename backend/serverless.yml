@@ -1,0 +1,68 @@
+# ============================================================
+# DeFi Copilot — Backend Serverless Framework Configuration
+# Deploys Express app as AWS Lambda behind API Gateway
+# ============================================================
+
+service: defi-copilot-backend
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 30
+  environment:
+    NODE_ENV: production
+    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://defi-copilot.vercel.app'}
+    AWS_BEDROCK_REGION: ${env:AWS_REGION, 'us-east-1'}
+    BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID, 'anthropic.claude-sonnet-4-20250514'}
+    SUI_RPC_URL: ${env:SUI_RPC_URL, 'https://fullnode.testnet.sui.io:443'}
+    MEMWAL_API_KEY: ${env:MEMWAL_API_KEY, ''}
+    MEMWAL_DELEGATE_KEY: ${env:MEMWAL_DELEGATE_KEY, ''}
+    CETUS_API_URL: ${env:CETUS_API_URL, ''}
+
+  # IAM permissions for Bedrock access
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+            - bedrock:InvokeModelWithResponseStream
+          Resource: "arn:aws:bedrock:*:*:model/anthropic.*"
+
+functions:
+  api:
+    handler: dist/index.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: ANY
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3001
+    noPrependStageInUrl: true
+
+package:
+  individually: true
+  patterns:
+    - "dist/**"
+    - "node_modules/**"
+    - "!node_modules/.cache/**"
+    - "!node_modules/@types/**"
+    - "!node_modules/typescript/**"
+    - "!src/**"
+    - "!tests/**"
+    - "!*.ts"
+    - "!tsconfig.json"
+    - "!vitest.config.ts"

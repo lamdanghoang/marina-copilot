@@ -272,11 +272,11 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 22: Cumulative concentration considers transaction history**
     - **Validates: Requirements 9.2**
 
-- [ ] 15. Checkpoint - Memory system integrated
+- [x] 15. Checkpoint - Memory system integrated
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Error handling, edge cases, and graceful degradation (Day 8)
-  - [ ] 16.1 Implement comprehensive error handling across all services
+- [x] 16. Error handling, edge cases, and graceful degradation (Day 8)
+  - [x] 16.1 Implement comprehensive error handling across all services
     - LLM timeout (8s): return friendly retry message, re-enable input
     - Cetus timeout (10s): return routing unavailable error with pair info
     - MemWal unavailable (5s): proceed without memory, no error shown to user
@@ -290,8 +290,8 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Validator data unavailable: block stake with error message
     - _Requirements: 2.3, 2.4, 2.6, 3.4, 3.5, 3.6, 6.4, 6.6, 6.7, 11.1, 11.2, 11.3, 11.4, 12.4_
 
-- [ ] 17. Deployment configuration (Day 8-9)
-  - [ ] 17.1 Configure separate FE/BE deployments
+- [x] 17. Deployment configuration (Day 8-9)
+  - [x] 17.1 Configure separate FE/BE deployments
     - Set up Vercel project for `frontend/` directory (Next.js)
     - Configure `NEXT_PUBLIC_API_URL` env var in Vercel pointing to Lambda URL
     - Create `backend/serverless.yml` (or SAM template) for AWS Lambda deployment

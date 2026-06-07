@@ -9,7 +9,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:props": "vitest run tests/properties",
-    "test:unit": "vitest run tests/unit"
+    "test:unit": "vitest run tests/unit",
+    "deploy": "npm run build && npx serverless deploy",
+    "deploy:prod": "npm run build && npx serverless deploy --stage prod",
+    "package": "npm run build && npx serverless package"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.600.0",

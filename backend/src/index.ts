@@ -21,7 +21,32 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+
+// JSON body parser with size limit to prevent large payload attacks
+app.use(express.json({ limit: "100kb" }));
+
+// Handle malformed JSON parse errors gracefully
+app.use((err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err && typeof err === "object" && "type" in err && (err as { type: string }).type === "entity.parse.failed") {
+    return res.status(400).json({
+      type: "error",
+      error: {
+        message: "Invalid request format. Please check your input and try again.",
+        suggestion: "Ensure your request contains valid JSON.",
+      },
+    });
+  }
+  if (err && typeof err === "object" && "type" in err && (err as { type: string }).type === "entity.too.large") {
+    return res.status(413).json({
+      type: "error",
+      error: {
+        message: "Request too large. Please reduce the size of your message.",
+        suggestion: "Try sending a shorter message.",
+      },
+    });
+  }
+  next(err);
+});
 
 // --- Routes ---
 app.use("/api/process-intent", processIntentRouter);

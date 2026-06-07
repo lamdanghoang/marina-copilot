@@ -73,13 +73,33 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
         statusText: "",
         currentPreview: response.type === "preview" ? response.preview ?? null : null,
       }));
-    } catch {
+    } catch (error: unknown) {
+      // Build user-friendly error message from API client error
+      let errorContent = "I couldn't process that. Please try again.";
+      let suggestion: string | undefined;
+
+      if (error && typeof error === "object" && "message" in error) {
+        const apiError = error as { message?: string; isTimeout?: boolean; isNetworkError?: boolean; status?: number };
+        if (apiError.isTimeout) {
+          errorContent = "The request timed out. Please try again.";
+          suggestion = "If this keeps happening, try a simpler request.";
+        } else if (apiError.isNetworkError) {
+          errorContent = "Couldn't reach the server. Please check your connection and try again.";
+        } else if (apiError.status && apiError.status >= 500) {
+          errorContent = "Something went wrong on our end. Please try again in a moment.";
+          suggestion = "If this keeps happening, try rephrasing your request.";
+        } else if (apiError.message) {
+          errorContent = apiError.message;
+        }
+      }
+
       const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: "I couldn't process that. Please try again.",
+        content: errorContent,
         type: "error",
         timestamp: Date.now(),
+        ...(suggestion ? { metadata: { memoryIndicator: suggestion } } : {}),
       };
 
       set((state) => ({
