@@ -65,7 +65,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 19: Message input validation**
     - **Validates: Requirements 10.3**
 
-- [ ] 3. Intent Parser with single merged LLM call — Backend (Day 2)
+- [x] 3. Intent Parser with single merged LLM call — Backend (Day 2)
   - [x] 3.1 Implement LLM client for AWS Bedrock (Claude Sonnet)
     - Create `backend/src/services/llm-client.ts` with Bedrock API integration
     - Implement 8-second timeout with error handling
@@ -73,7 +73,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Handle LLM errors with user-friendly messages
     - _Requirements: 12.1, 12.4_
 
-  - [ ] 3.2 Implement Intent Parser service
+  - [x] 3.2 Implement Intent Parser service
     - Create `backend/src/services/intent-parser.ts` implementing `IntentParserInput` → `IntentParserOutput`
     - Assemble LLM context: user message + up to 10 memories + wallet balances + conversation history
     - Parse LLM response into structured intent OR clarification
