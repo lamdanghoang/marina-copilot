@@ -26,3 +26,6 @@ coverage/
 
 # Serverless
 .serverless/
+
+# Personal learning notes
+docs/LEARNING_LOG.md

@@ -132,7 +132,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 6: Default slippage tolerance calculation**
     - **Validates: Requirements 2.5**
 
-- [x] 6. PTB Compiler — Stake action, Backend (Day 3-4)
+- [ ] 6. PTB Compiler — Stake action, Backend (Day 3-4)
   - [x] 6.1 Implement stake PTB compilation
     - Add `compileStake(intent, walletAddress)` method to PTB Compiler in `backend/src/services/ptb-compiler.ts`
     - Fetch active validators from Sui system state
@@ -148,8 +148,8 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 7: Highest APY validator selection**
     - **Validates: Requirements 3.2**
 
-- [ ] 7. Guardian risk assessment — Backend (Day 4)
-  - [ ] 7.1 Implement Guardian service with deterministic risk checks
+- [x] 7. Guardian risk assessment — Backend (Day 4)
+  - [x] 7.1 Implement Guardian service with deterministic risk checks
     - Create `backend/src/services/guardian.ts` implementing `GuardianInput` → `GuardianOutput`
     - Implement slippage detection: flag when price impact > 1%, include impact percentage and estimated dollar loss
     - Implement concentration detection: flag when single-asset > 70% of portfolio value after transaction
