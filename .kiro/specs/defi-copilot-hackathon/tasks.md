@@ -191,11 +191,11 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Create `backend/src/index.ts` Express app entry point with CORS middleware
     - _Requirements: 12.1, 11.1, 11.4_
 
-- [ ] 9. Checkpoint - Swap e2e working (Day 4 MVP)
+- [x] 9. Checkpoint - Swap e2e working (Day 4 MVP)
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. PTB Preview and confirmation flow — Frontend (Day 5)
-  - [ ] 10.1 Build Preview Renderer components
+- [x] 10. PTB Preview and confirmation flow — Frontend (Day 5)
+  - [x] 10.1 Build Preview Renderer components
     - Create `frontend/src/components/PTBPreview.tsx` with numbered step list (action verb + token names + amounts)
     - Display swap metadata: exchange rate, minimum received, price impact, gas fee
     - Display stake metadata: validator name, estimated APY, gas fee
@@ -211,8 +211,8 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 13: Preview renders complete data for its response type**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.6**
 
-- [ ] 11. Transaction execution and feedback — Frontend (Day 5)
-  - [ ] 11.1 Implement transaction execution flow
+- [x] 11. Transaction execution and feedback — Frontend (Day 5)
+  - [x] 11.1 Implement transaction execution flow
     - Deserialize `transactionBytes` (base64) from backend response into `Transaction` object
     - Submit to connected wallet via `signAndExecuteTransaction` from `@mysten/dapp-kit`
     - Display loading states with phase-specific status messages (signing, submitting, confirming)

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
+import { PTBPreview } from "@/components/PTBPreview";
 import { TypingIndicator } from "@/components/TypingIndicator";
 
 export function ChatContainer() {
@@ -12,13 +13,16 @@ export function ChatContainer() {
   const statusText = useCopilotStore((s) => s.statusText);
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const sendMessage = useCopilotStore((s) => s.sendMessage);
+  const currentPreview = useCopilotStore((s) => s.currentPreview);
+  const confirmTransaction = useCopilotStore((s) => s.confirmTransaction);
+  const cancelPreview = useCopilotStore((s) => s.cancelPreview);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll when new messages arrive or processing state changes
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isProcessing]);
+  }, [messages, isProcessing, currentPreview]);
 
   const isWalletConnected = !!walletAddress;
 
@@ -41,6 +45,19 @@ export function ChatContainer() {
 
           {isProcessing && (
             <TypingIndicator statusText={statusText} />
+          )}
+
+          {currentPreview && !isProcessing && (
+            <div className="flex justify-start">
+              <div className="max-w-[90%]">
+                <PTBPreview
+                  preview={currentPreview}
+                  onConfirm={confirmTransaction}
+                  onCancel={cancelPreview}
+                  isExecuting={isProcessing}
+                />
+              </div>
+            </div>
           )}
 
           {/* Scroll anchor */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { TransactionResult } from "@/components/TransactionResult";
 import type { ChatMessage as ChatMessageType } from "@/types";
 
 interface ChatMessageProps {
@@ -9,6 +10,15 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
+
+  // Render transaction results (success/error with metadata) using dedicated component
+  if (
+    (message.type === "success" || message.type === "error") &&
+    message.role === "assistant" &&
+    (message.metadata?.txDigest || message.metadata?.explorerUrl)
+  ) {
+    return <TransactionResult message={message} />;
+  }
 
   return (
     <div
@@ -22,7 +32,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
           "max-w-[75%] rounded-lg px-4 py-2.5 text-sm",
           isUser
             ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground"
+            : message.type === "error"
+              ? "bg-red-500/10 text-foreground"
+              : "bg-muted text-foreground"
         )}
       >
         {message.metadata?.memoryIndicator && !isUser && (

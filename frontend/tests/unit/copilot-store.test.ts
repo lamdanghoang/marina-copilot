@@ -216,7 +216,7 @@ describe("CopilotStore", () => {
       expect(state.isProcessing).toBe(false);
     });
 
-    it("should set processing state and clear preview on error (placeholder)", async () => {
+    it("should be a no-op (execution handled by useTransactionExecution hook)", async () => {
       useCopilotStore.setState({
         currentPreview: {
           steps: [{ index: 1, description: "Swap", type: "swap" }],
@@ -230,11 +230,9 @@ describe("CopilotStore", () => {
       await useCopilotStore.getState().confirmTransaction();
 
       const state = useCopilotStore.getState();
-      // Since signing is not implemented yet, it will fall into the catch block
-      expect(state.currentPreview).toBeNull();
+      // confirmTransaction is now a no-op in the store — real execution is in the hook
+      expect(state.currentPreview).not.toBeNull();
       expect(state.isProcessing).toBe(false);
-      expect(state.messages).toHaveLength(1);
-      expect(state.messages[0].content).toBe("Transaction was cancelled.");
     });
   });
 });

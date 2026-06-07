@@ -91,39 +91,11 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
   },
 
   confirmTransaction: async () => {
-    const { currentPreview } = get();
-
-    if (!currentPreview?.transactionBytes) return;
-
-    set({ isProcessing: true, statusText: "Awaiting wallet signature..." });
-
-    try {
-      // Placeholder: In actual implementation, this will:
-      // 1. Deserialize transactionBytes from base64
-      // 2. Call signAndExecuteTransaction via @mysten/dapp-kit
-      // 3. Handle the result
-      // For now, this is a stub that the transaction execution task will fill in.
-
-      set({ statusText: "Submitting to network..." });
-
-      // TODO: Implement actual wallet signing in task 11.1
-      throw new Error("Transaction signing not yet implemented");
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Transaction was cancelled.",
-        type: "error",
-        timestamp: Date.now(),
-      };
-
-      set((state) => ({
-        messages: [...state.messages, errorMessage],
-        isProcessing: false,
-        statusText: "",
-        currentPreview: null,
-      }));
-    }
+    // This is now a no-op in the store.
+    // Transaction execution is handled by the useTransactionExecution hook
+    // which has access to wallet signing via @mysten/dapp-kit.
+    // The hook calls useCopilotStore.setState directly.
+    // This method is kept for interface compatibility.
   },
 
   cancelPreview: () => {
