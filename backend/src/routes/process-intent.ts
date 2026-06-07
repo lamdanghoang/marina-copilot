@@ -9,6 +9,7 @@ import { Router, Request, Response } from "express";
 import { parseIntent } from "../services/intent-parser";
 import { compileSwap, compileStake } from "../services/ptb-compiler";
 import { assessRisks } from "../services/guardian";
+import { recall } from "../services/memory-service";
 import {
   ProcessIntentRequest,
   ProcessIntentResponse,
@@ -71,8 +72,7 @@ router.post("/", async (req: Request, res: Response) => {
     // --- Step 1: Recall memories (MemWal) — graceful degradation ---
     let memories: MemoryRecord[] = [];
     try {
-      // TODO: Wire MemWal recall in task 13. For now, use empty array.
-      memories = [];
+      memories = await recall(walletAddress, message);
     } catch (error) {
       // Silent degradation — proceed without memory
       console.error("[Memory] Recall failed:", error);

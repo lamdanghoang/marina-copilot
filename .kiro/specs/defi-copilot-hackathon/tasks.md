@@ -227,11 +227,11 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 14: Success message contains all required fields**
     - **Validates: Requirements 6.3**
 
-- [ ] 12. Checkpoint - Full flow with preview and execution
+- [x] 12. Checkpoint - Full flow with preview and execution
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. MemWal integration — remember and recall, Backend (Day 6)
-  - [ ] 13.1 Implement Memory Service with MemWal SDK
+- [x] 13. MemWal integration — remember and recall, Backend (Day 6)
+  - [x] 13.1 Implement Memory Service with MemWal SDK
     - Create `backend/src/services/memory-service.ts` implementing `MemoryService` interface
     - Implement `recall(walletAddress, context, limit)`: fetch up to 10 recent memories from MemWal
     - Implement `remember(walletAddress, content)`: store memory record to MemWal

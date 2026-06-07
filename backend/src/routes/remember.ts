@@ -7,6 +7,7 @@
 
 import { Router, Request, Response } from "express";
 import { MemoryContent } from "../types";
+import { remember } from "../services/memory-service";
 
 const router = Router();
 
@@ -26,7 +27,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
-    // TODO: Wire MemWal in task 13. For now, log and return success.
+    await remember(walletAddress, content);
     console.log(`[Memory] Store for ${walletAddress}:`, content.type);
   } catch (error) {
     // Silent degradation — log failure but still return 200
