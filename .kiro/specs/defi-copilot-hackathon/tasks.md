@@ -45,7 +45,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 15: Wallet address truncation and balance formatting**
     - **Validates: Requirements 7.2**
 
-- [x] 2. Chat interface and conversational UX — Frontend (Day 1-2)
+- [ ] 2. Chat interface and conversational UX — Frontend (Day 1-2)
   - [x] 2.1 Create Zustand store for application state
     - Implement `CopilotStore` interface from design with all state slices and actions
     - Include wallet state, chat messages, processing state, current preview
@@ -66,7 +66,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Validates: Requirements 10.3**
 
 - [ ] 3. Intent Parser with single merged LLM call — Backend (Day 2)
-  - [ ] 3.1 Implement LLM client for AWS Bedrock (Claude Sonnet)
+  - [x] 3.1 Implement LLM client for AWS Bedrock (Claude Sonnet)
     - Create `backend/src/services/llm-client.ts` with Bedrock API integration
     - Implement 8-second timeout with error handling
     - Create system prompt template that merges intent reasoning + risk flagging
