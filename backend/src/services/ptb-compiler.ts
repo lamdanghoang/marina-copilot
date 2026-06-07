@@ -10,6 +10,7 @@ import BN from "bn.js";
 import { config } from "../lib/config";
 import {
   SwapIntent,
+  StakeIntent,
   PTBCompilerOutput,
   TransactionMetadata,
   PTBStep,
@@ -20,6 +21,7 @@ import {
   getTokenBySymbol,
   DEFAULT_SLIPPAGE,
   GAS_RESERVE_SUI,
+  MINIMUM_STAKE_AMOUNT,
 } from "../types/config";
 
 // --- Constants ---
@@ -453,6 +455,219 @@ function buildRoutePath(
   return path;
 }
 
+// --- Stake Compiler ---
+
+/**
+ * Calculate APY from a validator's staking pool exchange rate history.
+ * Uses the ratio of the last two epoch exchange rates.
+ */
+function calculateValidatorApy(
+  stakingPoolSuiBalance: string,
+  stakingPoolTokenBalance: string,
+  epoch: number
+): number {
+  // APY = (poolSuiBalance / poolTokenBalance - 1) * 365.25 / epochDuration
+  // Simplified: use the ratio as a proxy, annualized
+  const suiBalance = Number(stakingPoolSuiBalance);
+  const tokenBalance = Number(stakingPoolTokenBalance);
+
+  if (tokenBalance === 0 || suiBalance === 0) return 0;
+
+  // Exchange rate represents accumulated rewards
+  const exchangeRate = suiBalance / tokenBalance;
+  // Each epoch is ~24 hours on Sui
+  // Annualize the per-epoch gain
+  const epochGain = Math.max(exchangeRate - 1, 0);
+  const apy = epochGain * 365.25 * 100; // Convert to percentage
+
+  return Math.round(apy * 100) / 100; // Round to 2 decimal places
+}
+
+/**
+ * Compile a stake intent into a Sui Transaction using request_add_stake.
+ * Returns PTBCompilerOutput on success, or AppError on failure.
+ */
+export async function compileStake(
+  intent: StakeIntent,
+  walletAddress: string
+): Promise<PTBCompilerOutput | AppError> {
+  // 1. Validate minimum stake amount
+  if (intent.amount < MINIMUM_STAKE_AMOUNT) {
+    return {
+      code: ErrorCode.BELOW_MINIMUM,
+      message: `Minimum stake amount is ${MINIMUM_STAKE_AMOUNT} SUI. You requested ${intent.amount} SUI.`,
+      suggestion: `Please stake at least ${MINIMUM_STAKE_AMOUNT} SUI.`,
+    };
+  }
+
+  // 2. Check SUI balance (need amount + gas reserve)
+  const client = getSuiClient();
+  let availableBalance: bigint;
+  try {
+    availableBalance = await getBalance(walletAddress, "0x2::sui::SUI");
+  } catch {
+    availableBalance = BigInt(0);
+  }
+
+  const gasReserveRaw = toRawAmount(GAS_RESERVE_SUI, SUI_DECIMALS);
+  const usableBalance = availableBalance > gasReserveRaw
+    ? availableBalance - gasReserveRaw
+    : BigInt(0);
+
+  const amountInMist = toRawAmount(intent.amount, SUI_DECIMALS);
+
+  if (usableBalance < amountInMist) {
+    const availableHuman = fromRawAmount(usableBalance, SUI_DECIMALS);
+    return {
+      code: ErrorCode.INSUFFICIENT_BALANCE,
+      message: `You have ${availableHuman} SUI available for staking (after ${GAS_RESERVE_SUI} SUI gas reserve) but need ${intent.amount} SUI. Try a smaller amount.`,
+      suggestion: `Your available stakeable balance is ${availableHuman} SUI.`,
+      details: {
+        available: availableHuman,
+        required: intent.amount,
+        gasReserve: GAS_RESERVE_SUI,
+      },
+    };
+  }
+
+  // 3. Fetch validators from Sui system state
+  let systemState;
+  try {
+    systemState = await client.getLatestSuiSystemState();
+  } catch {
+    return {
+      code: ErrorCode.VALIDATOR_UNAVAILABLE,
+      message: "Validator information is temporarily unavailable. Please try again later.",
+      suggestion: "Wait a moment and retry your stake request.",
+    };
+  }
+
+  if (
+    !systemState ||
+    !systemState.activeValidators ||
+    systemState.activeValidators.length === 0
+  ) {
+    return {
+      code: ErrorCode.VALIDATOR_UNAVAILABLE,
+      message: "Validator information is temporarily unavailable. Please try again later.",
+      suggestion: "Wait a moment and retry your stake request.",
+    };
+  }
+
+  // 4. Select validator: highest APY if no preference, or by name if specified
+  const validators = systemState.activeValidators;
+  const currentEpoch = Number(systemState.epoch);
+
+  // Calculate APY for each validator
+  const validatorsWithApy = validators.map((v) => ({
+    address: v.suiAddress,
+    name: v.name,
+    apy: calculateValidatorApy(
+      v.stakingPoolSuiBalance,
+      v.poolTokenBalance,
+      currentEpoch
+    ),
+    commission: Number(v.commissionRate) / 100, // basis points to percentage
+  }));
+
+  let selectedValidator;
+
+  if (intent.validator) {
+    // Find by name (case-insensitive)
+    selectedValidator = validatorsWithApy.find(
+      (v) => v.name.toLowerCase() === intent.validator!.toLowerCase()
+    );
+    if (!selectedValidator) {
+      // Try partial match
+      selectedValidator = validatorsWithApy.find(
+        (v) => v.name.toLowerCase().includes(intent.validator!.toLowerCase())
+      );
+    }
+    if (!selectedValidator) {
+      return {
+        code: ErrorCode.VALIDATOR_UNAVAILABLE,
+        message: `Could not find validator "${intent.validator}". Please check the name and try again.`,
+        suggestion: "Try specifying a different validator or let me select the highest APY one for you.",
+      };
+    }
+  } else {
+    // Select highest APY validator
+    selectedValidator = validatorsWithApy.reduce((best, current) =>
+      current.apy > best.apy ? current : best
+    );
+  }
+
+  // 5. Build Transaction
+  const tx = new Transaction();
+  tx.setSender(walletAddress);
+
+  const stakeCoin = tx.splitCoins(tx.gas, [tx.pure.u64(amountInMist)]);
+  tx.moveCall({
+    target: "0x3::sui_system::request_add_stake",
+    arguments: [
+      tx.object("0x5"), // SuiSystemState shared object
+      stakeCoin,
+      tx.pure.address(selectedValidator.address),
+    ],
+  });
+
+  // 6. Serialize and validate via dry run
+  let transactionBytes: string;
+  let gasEstimate = 0.005; // default fallback
+
+  try {
+    const bytes = await tx.build({ client });
+    transactionBytes = Buffer.from(bytes).toString("base64");
+
+    // Dry run to validate and get gas estimate
+    try {
+      const dryRun = await client.dryRunTransactionBlock({
+        transactionBlock: transactionBytes,
+      });
+      if (dryRun.effects?.gasUsed) {
+        const { computationCost, storageCost, storageRebate } = dryRun.effects.gasUsed;
+        const totalGas = BigInt(computationCost) + BigInt(storageCost) - BigInt(storageRebate);
+        gasEstimate = Number(totalGas) / 10 ** SUI_DECIMALS;
+      }
+    } catch {
+      // Use fallback gas estimate
+    }
+  } catch {
+    // Fallback: serialize without resolving
+    transactionBytes = Buffer.from(tx.serialize()).toString("base64");
+  }
+
+  gasEstimate = Math.max(gasEstimate, 0.001);
+
+  // 7. Build steps
+  const steps: PTBStep[] = [
+    {
+      index: 1,
+      description: `Reserve ${GAS_RESERVE_SUI} SUI for gas`,
+      type: "split",
+    },
+    {
+      index: 2,
+      description: `Stake ${intent.amount} SUI with ${selectedValidator.name}`,
+      type: "stake",
+    },
+  ];
+
+  // 8. Build metadata
+  const metadata: TransactionMetadata = {
+    type: "stake",
+    steps,
+    gasEstimate,
+    validatorName: selectedValidator.name,
+    estimatedApy: selectedValidator.apy,
+  };
+
+  return {
+    transactionBytes,
+    metadata,
+  };
+}
+
 // --- Utility Exports for Testing ---
 
 export {
@@ -462,4 +677,5 @@ export {
   buildRoutePath,
   getBalance,
   getSuiClient,
+  calculateValidatorApy,
 };

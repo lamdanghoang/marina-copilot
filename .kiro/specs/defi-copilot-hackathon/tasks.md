@@ -132,8 +132,8 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - **Property 6: Default slippage tolerance calculation**
     - **Validates: Requirements 2.5**
 
-- [ ] 6. PTB Compiler — Stake action, Backend (Day 3-4)
-  - [ ] 6.1 Implement stake PTB compilation
+- [x] 6. PTB Compiler — Stake action, Backend (Day 3-4)
+  - [x] 6.1 Implement stake PTB compilation
     - Add `compileStake(intent, walletAddress)` method to PTB Compiler in `backend/src/services/ptb-compiler.ts`
     - Fetch active validators from Sui system state
     - Select highest APY validator when user has no preference
