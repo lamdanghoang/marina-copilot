@@ -32,7 +32,7 @@ export function ChatInput({ onSend, isDisabled, placeholder }: ChatInputProps) {
   };
 
   return (
-    <div className="flex items-end gap-2 border-t border-border bg-background p-4">
+    <div className="flex items-end gap-2 border-t border-border/30 bg-background/80 p-4 backdrop-blur-sm">
       <textarea
         ref={inputRef}
         value={value}
@@ -43,9 +43,9 @@ export function ChatInput({ onSend, isDisabled, placeholder }: ChatInputProps) {
         aria-label="Message input"
         rows={1}
         className={cn(
-          "flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm",
-          "placeholder:text-muted-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "flex-1 resize-none rounded-full border border-border/50 bg-muted/50 px-4 py-2.5 text-sm",
+          "placeholder:text-muted-foreground/50",
+          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "min-h-[40px] max-h-[120px]"
         )}
@@ -55,8 +55,8 @@ export function ChatInput({ onSend, isDisabled, placeholder }: ChatInputProps) {
         disabled={isDisabled || !value.trim()}
         aria-label="Send message"
         className={cn(
-          "inline-flex h-10 w-10 items-center justify-center rounded-md",
-          "bg-primary text-primary-foreground",
+          "inline-flex h-10 w-10 items-center justify-center rounded-full",
+          "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(143,245,255,0.3)]",
           "hover:bg-primary/90 transition-colors",
           "disabled:pointer-events-none disabled:opacity-50"
         )}
