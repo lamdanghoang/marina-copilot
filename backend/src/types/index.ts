@@ -76,7 +76,12 @@ export interface StakeIntent {
   validator?: string;
 }
 
-export type StructuredIntent = SwapIntent | StakeIntent;
+export interface QueryIntent {
+  action: "query";
+  queryType: "balance" | "history";
+}
+
+export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent;
 
 // --- PTB & Transaction ---
 
@@ -132,7 +137,7 @@ export interface ProcessIntentRequest {
 }
 
 export interface ProcessIntentResponse {
-  type: "clarification" | "preview" | "error";
+  type: "clarification" | "preview" | "error" | "info";
   // Optional memory indicator shown when preferences are applied
   memoryIndicator?: string | null;
   // When type = "clarification"
@@ -152,6 +157,10 @@ export interface ProcessIntentResponse {
   error?: {
     message: string;
     suggestion?: string;
+  };
+  // When type = "info" (read-only query response)
+  info?: {
+    message: string;
   };
 }
 

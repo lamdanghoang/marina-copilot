@@ -190,6 +190,15 @@ function buildAssistantMessage(response: ProcessIntentResponse): ChatMessage {
         timestamp: Date.now(),
       };
 
+    case "info":
+      return {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: response.info?.message ?? "Here's what I found.",
+        type: "text",
+        timestamp: Date.now(),
+      };
+
     case "error":
       return {
         id: crypto.randomUUID(),

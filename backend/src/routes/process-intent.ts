@@ -18,7 +18,30 @@ import {
   MemoryRecord,
   PortfolioBalance,
   TokenBalance,
+  QueryIntent,
 } from "../types";
+
+/**
+ * Handle read-only query intents (balance, history).
+ */
+function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[]): string {
+  if (intent.queryType === "balance") {
+    if (!balances || balances.length === 0) {
+      return "I couldn't fetch your balances. Please make sure your wallet is connected.";
+    }
+    const lines = balances.map((b) => {
+      const usd = b.valueUsd ? ` (~$${b.valueUsd.toFixed(2)})` : "";
+      return `• ${b.symbol}: ${b.balance}${usd}`;
+    });
+    return `Here's your wallet balance:\n${lines.join("\n")}`;
+  }
+
+  if (intent.queryType === "history") {
+    return "Your recent transaction history is available on Sui Explorer. I can see from memory that you've been active with swaps and staking. Would you like me to help with a specific transaction?";
+  }
+
+  return "I'm not sure what information you need. I can check your balance or transaction history.";
+}
 
 const router = Router();
 
@@ -102,6 +125,17 @@ router.post("/", async (req: Request, res: Response) => {
     // --- Step 4: Compile PTB ---
     const intent = parserOutput.intent;
     let compiledResult;
+
+    if (intent.action === "query") {
+      // Read-only action — respond directly, no PTB needed
+      const infoMessage = handleQueryIntent(intent, balances || []);
+      const response: ProcessIntentResponse = {
+        type: "info",
+        memoryIndicator: parserOutput.memoryIndicator,
+        info: { message: infoMessage },
+      };
+      return res.json(response);
+    }
 
     if (intent.action === "swap") {
       compiledResult = await compileSwap(intent, walletAddress);

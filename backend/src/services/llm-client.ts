@@ -63,6 +63,7 @@ export function buildSystemPrompt(): string {
 ## Available Actions
 - **swap**: Exchange tokens via Cetus DEX aggregator. Required fields: fromToken, toToken, amount. Optional: dex, slippageTolerance.
 - **stake**: Stake SUI with a validator. Required fields: token (always "SUI"), amount. Optional: validator.
+- **query**: Read-only information request. Required fields: queryType ("balance" or "history"). No transaction needed.
 
 ## Supported Tokens
 ${tokenList}
@@ -80,12 +81,13 @@ You MUST return valid JSON matching this exact schema:
 {
   "reasoning": "Brief analysis of the user's request",
   "intent": {
-    "action": "swap" | "stake",
+    "action": "swap" | "stake" | "query",
     "fromToken": "TOKEN_SYMBOL",
     "toToken": "TOKEN_SYMBOL",
     "amount": <number>,
     "dex": "optional_dex_name",
-    "slippageTolerance": <optional_number>
+    "slippageTolerance": <optional_number>,
+    "queryType": "balance" | "history"
   } | null,
   "clarification": "Question to ask user" | null,
   "riskFlags": {
@@ -102,6 +104,8 @@ You MUST return valid JSON matching this exact schema:
 - NEVER guess token symbols — if ambiguous, ask which token they mean
 - If the user asks about an unsupported action, set intent=null and explain what actions are available
 - If a token symbol is not in the supported list, set intent=null and indicate the unrecognized token
+- For "check balance", "how much do I have", "what's my balance" → use action "query" with queryType "balance"
+- For "transaction history", "recent transactions", "what did I do" → use action "query" with queryType "history"
 - For swap intents: set slippageConcern=true if the amount is very large relative to balances
 - For any intent: set concentrationConcern=true if it would make one token >70% of portfolio
 - Use memory context to fill in defaults (e.g. preferred DEX) without asking again
