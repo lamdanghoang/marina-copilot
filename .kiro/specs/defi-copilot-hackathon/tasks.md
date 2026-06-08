@@ -302,7 +302,7 @@ The plan is structured around the 10-day hackathon timeline with each day ending
     - Test end-to-end flow: frontend (Vercel) → backend (Lambda) → Sui Testnet
     - _Requirements: 12.1_
 
-- [ ] 18. Polish and submission preparation (Day 9-10)
+- [x] 18. Polish and submission preparation (Day 9-10)
   - [x] 18.1 UI polish and loading states
     - Add contextual loading status text ("Parsing intent...", "Compiling transaction...", "Checking risks...")
     - Ensure all loading states transition smoothly

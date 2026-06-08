@@ -2,6 +2,7 @@
 
 import { WalletButton } from "@/components/WalletButton";
 import { ChatContainer } from "@/components/ChatContainer";
+import { MemorySetup } from "@/components/MemorySetup";
 
 export default function Home() {
   return (
@@ -11,6 +12,9 @@ export default function Home() {
         <h1 className="text-lg font-bold text-foreground">DeFi Copilot</h1>
         <WalletButton />
       </header>
+
+      {/* Memory setup prompt */}
+      <MemorySetup />
 
       {/* Main chat area */}
       <main className="flex flex-1 flex-col overflow-hidden">

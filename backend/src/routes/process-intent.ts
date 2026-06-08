@@ -54,6 +54,7 @@ router.post("/", async (req: Request, res: Response) => {
     walletAddress,
     conversationHistory,
     balances,
+    memwalCredentials,
   } = req.body as ProcessIntentRequest;
 
   // Validate required fields
@@ -72,7 +73,7 @@ router.post("/", async (req: Request, res: Response) => {
     // --- Step 1: Recall memories (MemWal) — graceful degradation ---
     let memories: MemoryRecord[] = [];
     try {
-      memories = await recall(walletAddress, message);
+      memories = await recall(walletAddress, message, 10, memwalCredentials);
     } catch (error) {
       // Silent degradation — proceed without memory
       console.error("[Memory] Recall failed:", error);
@@ -104,6 +105,26 @@ router.post("/", async (req: Request, res: Response) => {
 
     if (intent.action === "swap") {
       compiledResult = await compileSwap(intent, walletAddress);
+
+      // Requirement 9.4: If preferred DEX has no route, retry without DEX preference
+      if (
+        isAppError(compiledResult) &&
+        compiledResult.code === ErrorCode.NO_ROUTE &&
+        intent.dex &&
+        parserOutput.memoryIndicator
+      ) {
+        const fallbackIntent = { ...intent, dex: undefined };
+        compiledResult = await compileSwap(fallbackIntent, walletAddress);
+
+        // If fallback succeeds, update memory indicator to inform user
+        if (!isAppError(compiledResult)) {
+          parserOutput.memoryIndicator = null;
+          // Add a note that preferred DEX was unavailable
+          compiledResult.metadata.steps[0].description =
+            compiledResult.metadata.steps[0].description +
+            ` (${intent.dex} unavailable for this pair)`;
+        }
+      }
     } else if (intent.action === "stake") {
       compiledResult = await compileStake(intent, walletAddress);
     } else {

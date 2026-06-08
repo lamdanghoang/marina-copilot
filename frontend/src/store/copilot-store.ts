@@ -3,6 +3,7 @@ import {
   ChatMessage,
   TokenBalance,
   ProcessIntentResponse,
+  MemwalCredentials,
 } from "@/types";
 import { processIntent } from "@/lib/api-client";
 
@@ -10,6 +11,9 @@ interface CopilotStore {
   // Wallet
   walletAddress: string | null;
   balances: TokenBalance[];
+
+  // Memory
+  memwalCredentials: MemwalCredentials | null;
 
   // Chat
   messages: ChatMessage[];
@@ -25,19 +29,21 @@ interface CopilotStore {
   cancelPreview(): void;
   connectWallet(address: string, balances: TokenBalance[]): void;
   disconnectWallet(): void;
+  setMemwalCredentials(creds: MemwalCredentials | null): void;
 }
 
 export const useCopilotStore = create<CopilotStore>((set, get) => ({
   // Initial state
   walletAddress: null,
   balances: [],
+  memwalCredentials: null,
   messages: [],
   isProcessing: false,
   statusText: "",
   currentPreview: null,
 
   sendMessage: async (message: string) => {
-    const { walletAddress, balances, messages } = get();
+    const { walletAddress, balances, messages, memwalCredentials } = get();
 
     if (!walletAddress) return;
 
@@ -70,6 +76,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
         walletAddress,
         conversationHistory: [...messages, userMessage],
         balances,
+        memwalCredentials: memwalCredentials ?? undefined,
       });
 
       // Clear status timers on response
@@ -150,11 +157,16 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
     set({
       walletAddress: null,
       balances: [],
+      memwalCredentials: null,
       messages: [],
       currentPreview: null,
       isProcessing: false,
       statusText: "",
     });
+  },
+
+  setMemwalCredentials: (creds: MemwalCredentials | null) => {
+    set({ memwalCredentials: creds });
   },
 }));
 

@@ -33,8 +33,8 @@ const preferenceCategoryArb = fc.constantFrom("dex", "slippage", "validator");
 // --- Property 16: Memory record completeness on store ---
 
 describe("Feature: defi-copilot-hackathon, Property 16: Memory record completeness on store", () => {
-  it("for any stored transaction, record contains: action type, tokens, amounts, protocol, outcome, timestamp within 5s", () => {
-    fc.assert(
+  it("for any stored transaction, record contains: action type, tokens, amounts, protocol, outcome, timestamp within 5s", async () => {
+    await fc.assert(
       fc.asyncProperty(
         walletAddressArb,
         actionTypeArb,
@@ -43,6 +43,7 @@ describe("Feature: defi-copilot-hackathon, Property 16: Memory record completene
         protocolArb,
         outcomeArb,
         async (walletAddress, action, tokens, amounts, protocol, outcome) => {
+          _clearMemoryStore();
           const beforeStore = Date.now();
 
           const content: MemoryContent = {
@@ -90,14 +91,15 @@ describe("Feature: defi-copilot-hackathon, Property 16: Memory record completene
 // --- Property 17: Preference overwrite semantics ---
 
 describe("Feature: defi-copilot-hackathon, Property 17: Preference overwrite semantics", () => {
-  it("for any two preference stores of same category, only the latest is returned on recall", () => {
-    fc.assert(
+  it("for any two preference stores of same category, only the latest is returned on recall", async () => {
+    await fc.assert(
       fc.asyncProperty(
         walletAddressArb,
         preferenceCategoryArb,
         fc.string({ minLength: 3, maxLength: 20 }),
         fc.string({ minLength: 3, maxLength: 20 }),
         async (walletAddress, category, firstValue, secondValue) => {
+          _clearMemoryStore();
           // Pre-condition: values should be different to verify overwrite
           fc.pre(firstValue !== secondValue);
 

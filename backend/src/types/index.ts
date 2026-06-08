@@ -125,6 +125,10 @@ export interface ProcessIntentRequest {
   walletAddress: string;
   conversationHistory: ChatMessage[];
   balances: TokenBalance[];
+  memwalCredentials?: {
+    accountId: string;
+    delegateKey: string;
+  };
 }
 
 export interface ProcessIntentResponse {

@@ -14,10 +14,14 @@ const router = Router();
 interface RememberRequestBody {
   walletAddress: string;
   content: MemoryContent;
+  memwalCredentials?: {
+    accountId: string;
+    delegateKey: string;
+  };
 }
 
 router.post("/", async (req: Request, res: Response) => {
-  const { walletAddress, content } = req.body as RememberRequestBody;
+  const { walletAddress, content, memwalCredentials } = req.body as RememberRequestBody;
 
   // Validate required fields
   if (!walletAddress || !content) {
@@ -27,7 +31,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
-    await remember(walletAddress, content);
+    await remember(walletAddress, content, memwalCredentials);
     console.log(`[Memory] Store for ${walletAddress}:`, content.type);
   } catch (error) {
     // Silent degradation — log failure but still return 200

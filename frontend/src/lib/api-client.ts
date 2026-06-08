@@ -94,7 +94,8 @@ export async function processIntent(
 
 export async function remember(
   walletAddress: string,
-  content: MemoryContent
+  content: MemoryContent,
+  memwalCredentials?: { accountId: string; delegateKey: string }
 ): Promise<void> {
   const { controller, timeoutId } = createTimeoutController();
 
@@ -102,7 +103,7 @@ export async function remember(
     const response = await fetch(`${config.apiUrl}/api/remember`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ walletAddress, content }),
+      body: JSON.stringify({ walletAddress, content, memwalCredentials }),
       signal: controller.signal,
     });
 

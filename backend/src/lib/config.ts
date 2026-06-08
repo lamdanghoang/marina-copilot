@@ -19,8 +19,9 @@ export interface AppConfig {
     rpcUrl: string;
   };
   memwal: {
-    apiKey: string;
     delegateKey: string;
+    accountId: string;
+    serverUrl: string;
     timeoutMs: number;
   };
   cetus: {
@@ -48,8 +49,11 @@ export function loadConfig(): AppConfig {
         process.env.SUI_RPC_URL || "https://fullnode.testnet.sui.io:443",
     },
     memwal: {
-      apiKey: process.env.MEMWAL_API_KEY || "",
       delegateKey: process.env.MEMWAL_DELEGATE_KEY || "",
+      accountId: process.env.MEMWAL_ACCOUNT_ID || "",
+      serverUrl:
+        process.env.MEMWAL_SERVER_URL ||
+        "https://relayer-staging.memory.walrus.xyz",
       timeoutMs: 5000,
     },
     cetus: {

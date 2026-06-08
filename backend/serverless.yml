@@ -20,8 +20,9 @@ provider:
     AWS_BEDROCK_REGION: ${env:AWS_REGION, 'us-east-1'}
     BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID, 'anthropic.claude-sonnet-4-20250514'}
     SUI_RPC_URL: ${env:SUI_RPC_URL, 'https://fullnode.testnet.sui.io:443'}
-    MEMWAL_API_KEY: ${env:MEMWAL_API_KEY, ''}
     MEMWAL_DELEGATE_KEY: ${env:MEMWAL_DELEGATE_KEY, ''}
+    MEMWAL_ACCOUNT_ID: ${env:MEMWAL_ACCOUNT_ID, ''}
+    MEMWAL_SERVER_URL: ${env:MEMWAL_SERVER_URL, 'https://relayer-staging.memory.walrus.xyz'}
     CETUS_API_URL: ${env:CETUS_API_URL, ''}
 
   # IAM permissions for Bedrock access

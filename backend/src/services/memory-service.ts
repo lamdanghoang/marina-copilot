@@ -1,96 +1,35 @@
 // ============================================================
 // DeFi Copilot — Memory Service
-// Pluggable storage adapter pattern: InMemory (dev) + MemWal (prod)
+// Per-user MemWal accounts with InMemory fallback
 // Graceful degradation: recall → empty array, remember → silent fail
-// 5-second timeout on all external operations
 // ============================================================
 
+import { MemWal } from "@mysten-incubation/memwal";
 import { MemoryRecord, MemoryContent } from "../types";
 import { config } from "../lib/config";
 
-// --- Storage Adapter Interface ---
+// --- Per-User Credentials ---
 
-interface StorageAdapter {
-  getMemories(walletAddress: string): Promise<MemoryRecord[]>;
-  storeMemory(walletAddress: string, record: MemoryRecord): Promise<void>;
-  deleteMemory(walletAddress: string, recordId: string): Promise<void>;
+export interface UserMemwalCredentials {
+  accountId: string;
+  delegateKey: string;
 }
 
-// --- InMemory Adapter (Development / Fallback) ---
+// --- MemWal Client Factory (per-user, not singleton) ---
+
+function createMemWalClient(creds: UserMemwalCredentials): ReturnType<typeof MemWal.create> {
+  return MemWal.create({
+    key: creds.delegateKey,
+    accountId: creds.accountId,
+    serverUrl: config.memwal.serverUrl,
+    namespace: "defi-copilot",
+  });
+}
+
+// --- InMemory Fallback (Development / No credentials) ---
 
 const memoryStore = new Map<string, MemoryRecord[]>();
-
 const MAX_TRANSACTION_MEMORIES = 50;
-
-const inMemoryAdapter: StorageAdapter = {
-  async getMemories(walletAddress: string): Promise<MemoryRecord[]> {
-    return memoryStore.get(walletAddress) || [];
-  },
-
-  async storeMemory(walletAddress: string, record: MemoryRecord): Promise<void> {
-    const existing = memoryStore.get(walletAddress) || [];
-    existing.push(record);
-    memoryStore.set(walletAddress, existing);
-  },
-
-  async deleteMemory(walletAddress: string, recordId: string): Promise<void> {
-    const existing = memoryStore.get(walletAddress) || [];
-    const filtered = existing.filter((r) => r.id !== recordId);
-    memoryStore.set(walletAddress, filtered);
-  },
-};
-
-// --- MemWal Adapter (Production Stub) ---
-// TODO: Replace with actual MemWal SDK calls when available
-// Uses fetch to call MemWal HTTP API with config.memwal.apiKey and config.memwal.delegateKey
-
-const memwalAdapter: StorageAdapter = {
-  async getMemories(walletAddress: string): Promise<MemoryRecord[]> {
-    // TODO: Implement actual MemWal API call
-    // Example:
-    // const response = await fetch(`${MEMWAL_API_URL}/memories/${walletAddress}`, {
-    //   headers: {
-    //     'Authorization': `Bearer ${config.memwal.apiKey}`,
-    //     'X-Delegate-Key': config.memwal.delegateKey,
-    //   },
-    // });
-    // return response.json();
-
-    // Fallback to in-memory until MemWal SDK is integrated
-    return inMemoryAdapter.getMemories(walletAddress);
-  },
-
-  async storeMemory(walletAddress: string, record: MemoryRecord): Promise<void> {
-    // TODO: Implement actual MemWal API call
-    // Example:
-    // await fetch(`${MEMWAL_API_URL}/memories/${walletAddress}`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${config.memwal.apiKey}`,
-    //     'X-Delegate-Key': config.memwal.delegateKey,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(record),
-    // });
-
-    // Fallback to in-memory until MemWal SDK is integrated
-    return inMemoryAdapter.storeMemory(walletAddress, record);
-  },
-
-  async deleteMemory(walletAddress: string, recordId: string): Promise<void> {
-    // TODO: Implement actual MemWal API call
-    return inMemoryAdapter.deleteMemory(walletAddress, recordId);
-  },
-};
-
-// --- Adapter Selection ---
-
-function getAdapter(): StorageAdapter {
-  if (config.memwal.apiKey && config.memwal.delegateKey) {
-    return memwalAdapter;
-  }
-  return inMemoryAdapter;
-}
 
 // --- Timeout Wrapper ---
 
@@ -119,51 +58,102 @@ async function withTimeout<T>(
   }
 }
 
+// --- MemWal-backed operations ---
+
+async function recallFromMemWal(
+  creds: UserMemwalCredentials,
+  context: string,
+  limit: number
+): Promise<MemoryRecord[]> {
+  const client = createMemWalClient(creds);
+  const result = await client.recall({ query: context, limit });
+
+  if (!result.results || result.results.length === 0) return [];
+
+  return result.results.map((item: { text: string; blob_id: string; distance: number }, idx: number) => {
+    let parsed: Partial<MemoryRecord> = {};
+    try {
+      parsed = JSON.parse(item.text);
+    } catch {
+      // Plain text memory
+    }
+
+    return {
+      id: parsed.id || `memwal_${idx}_${Date.now()}`,
+      type: parsed.type || "transaction",
+      content: parsed.content || item.text,
+      timestamp: parsed.timestamp || Date.now(),
+      metadata: parsed.metadata,
+    } as MemoryRecord;
+  });
+}
+
+async function rememberToMemWal(
+  creds: UserMemwalCredentials,
+  record: MemoryRecord
+): Promise<void> {
+  const client = createMemWalClient(creds);
+  const payload = JSON.stringify({
+    id: record.id,
+    type: record.type,
+    content: record.content,
+    timestamp: record.timestamp,
+    metadata: record.metadata,
+  });
+
+  await client.remember(payload);
+}
+
+// --- InMemory fallback operations ---
+
+function recallFromMemory(walletAddress: string, limit: number): MemoryRecord[] {
+  const memories = memoryStore.get(walletAddress) || [];
+  return [...memories].sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
+}
+
+function rememberToMemory(walletAddress: string, record: MemoryRecord): void {
+  const existing = memoryStore.get(walletAddress) || [];
+  existing.push(record);
+  memoryStore.set(walletAddress, existing);
+}
+
 // --- Public API ---
 
 /**
  * Recall memories for a wallet address.
- * Returns up to `limit` (default 10) recent memories sorted by timestamp desc.
- * On timeout or error, returns empty array (graceful degradation).
+ * Uses per-user MemWal credentials if provided, otherwise InMemory fallback.
  */
 export async function recall(
   walletAddress: string,
   context: string,
-  limit: number = 10
+  limit: number = 10,
+  creds?: UserMemwalCredentials
 ): Promise<MemoryRecord[]> {
   try {
-    const adapter = getAdapter();
-    const memories = await withTimeout(
-      adapter.getMemories(walletAddress),
-      config.memwal.timeoutMs,
-      [] as MemoryRecord[]
-    );
-
-    // Sort by timestamp descending (most recent first)
-    const sorted = [...memories].sort((a, b) => b.timestamp - a.timestamp);
-
-    // Return up to limit
-    return sorted.slice(0, limit);
+    if (creds) {
+      return await withTimeout(
+        recallFromMemWal(creds, context, limit),
+        config.memwal.timeoutMs,
+        [] as MemoryRecord[]
+      );
+    }
+    return recallFromMemory(walletAddress, limit);
   } catch (error) {
-    // Graceful degradation — return empty array
     console.error("[Memory] Recall failed:", error);
     return [];
   }
 }
 
 /**
- * Store a memory record for a wallet address.
- * For type "preference": overwrites existing same-category preference.
- * For type "transaction": appends, keeps last MAX_TRANSACTION_MEMORIES.
- * On timeout or error, logs and doesn't throw (silent failure).
+ * Store a memory record.
+ * Uses per-user MemWal credentials if provided, otherwise InMemory fallback.
  */
 export async function remember(
   walletAddress: string,
-  content: MemoryContent
+  content: MemoryContent,
+  creds?: UserMemwalCredentials
 ): Promise<void> {
   try {
-    const adapter = getAdapter();
-
     const record: MemoryRecord = {
       id: generateId(),
       type: content.type,
@@ -172,60 +162,49 @@ export async function remember(
       metadata: content.metadata,
     };
 
-    if (content.type === "preference") {
-      // Preference overwrite semantics: remove existing same-category preference
-      const category = content.metadata?.category as string | undefined;
-      if (category) {
-        const existing = await withTimeout(
-          adapter.getMemories(walletAddress),
-          config.memwal.timeoutMs,
-          [] as MemoryRecord[]
-        );
-
-        const duplicates = existing.filter(
-          (m) =>
-            m.type === "preference" &&
-            (m.metadata?.category as string) === category
-        );
-
-        for (const dup of duplicates) {
-          await adapter.deleteMemory(walletAddress, dup.id);
-        }
-      }
-
+    if (creds) {
+      // Preference overwrite: store new one (MemWal's vector similarity
+      // naturally ranks the newest preference highest on recall)
       await withTimeout(
-        adapter.storeMemory(walletAddress, record),
+        rememberToMemWal(creds, record),
         config.memwal.timeoutMs,
         undefined
       );
     } else {
-      // Transaction: append, then trim to keep last MAX_TRANSACTION_MEMORIES
-      await withTimeout(
-        adapter.storeMemory(walletAddress, record),
-        config.memwal.timeoutMs,
-        undefined
-      );
+      // InMemory fallback with preference overwrite
+      if (content.type === "preference") {
+        const category = content.metadata?.category as string | undefined;
+        if (category) {
+          const store = memoryStore.get(walletAddress) || [];
+          const filtered = store.filter(
+            (m) =>
+              !(m.type === "preference" && (m.metadata?.category as string) === category)
+          );
+          memoryStore.set(walletAddress, filtered);
+        }
+      }
 
-      // Trim old transaction memories if exceeding limit
-      const allMemories = await withTimeout(
-        adapter.getMemories(walletAddress),
-        config.memwal.timeoutMs,
-        [] as MemoryRecord[]
-      );
+      rememberToMemory(walletAddress, record);
 
-      const txMemories = allMemories
-        .filter((m) => m.type === "transaction")
-        .sort((a, b) => b.timestamp - a.timestamp);
+      // Trim old transaction memories
+      if (content.type === "transaction") {
+        const store = memoryStore.get(walletAddress) || [];
+        const txMemories = store
+          .filter((m) => m.type === "transaction")
+          .sort((a, b) => b.timestamp - a.timestamp);
 
-      if (txMemories.length > MAX_TRANSACTION_MEMORIES) {
-        const toRemove = txMemories.slice(MAX_TRANSACTION_MEMORIES);
-        for (const old of toRemove) {
-          await adapter.deleteMemory(walletAddress, old.id);
+        if (txMemories.length > MAX_TRANSACTION_MEMORIES) {
+          const toRemoveIds = new Set(
+            txMemories.slice(MAX_TRANSACTION_MEMORIES).map((m) => m.id)
+          );
+          memoryStore.set(
+            walletAddress,
+            store.filter((m) => !toRemoveIds.has(m.id))
+          );
         }
       }
     }
   } catch (error) {
-    // Silent failure — log error, don't throw
     console.error("[Memory] Store failed:", error);
   }
 }
@@ -238,16 +217,10 @@ function generateId(): string {
 
 // --- Exported for Testing ---
 
-/**
- * Clear all in-memory storage. Used for testing only.
- */
 export function _clearMemoryStore(): void {
   memoryStore.clear();
 }
 
-/**
- * Get the raw memory store. Used for testing only.
- */
 export function _getMemoryStore(): Map<string, MemoryRecord[]> {
   return memoryStore;
 }

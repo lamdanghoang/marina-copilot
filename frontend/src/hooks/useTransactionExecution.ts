@@ -182,7 +182,8 @@ export function useTransactionExecution() {
       // Trigger memory store (fire and forget — silent on failure per req 8.6)
       try {
         const memoryContent = buildMemoryContent(metadata, digest);
-        await remember(walletAddress, memoryContent);
+        const { memwalCredentials } = useCopilotStore.getState();
+        await remember(walletAddress, memoryContent, memwalCredentials ?? undefined);
       } catch {
         // Silent degradation: memory store failure doesn't affect success display
         console.warn("Failed to store transaction memory");
