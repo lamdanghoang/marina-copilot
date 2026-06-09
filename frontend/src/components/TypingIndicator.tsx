@@ -6,17 +6,20 @@ interface TypingIndicatorProps {
 
 export function TypingIndicator({ statusText }: TypingIndicatorProps) {
   return (
-    <div className="flex justify-start" aria-busy="true" aria-label="Assistant is typing">
-      <div className="rounded-lg bg-muted px-4 py-3">
+    <div className="flex items-start gap-1.5" aria-busy="true" aria-label="Assistant is typing">
+      <span className="ml-1 text-[10px] uppercase tracking-widest text-primary opacity-70">
+        Marina
+      </span>
+      <div className="mt-4 flex items-center gap-2">
         <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-          <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-          <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary/40" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary/40 [animation-delay:75ms]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary/40 [animation-delay:150ms]" />
         </div>
         {statusText && (
-          <p className="mt-1.5 text-xs text-muted-foreground transition-opacity duration-300 ease-in-out">
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
             {statusText}
-          </p>
+          </span>
         )}
       </div>
     </div>

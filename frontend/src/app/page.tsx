@@ -25,46 +25,55 @@ export default function Home() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Header */}
-      <header className="flex items-center justify-between border-b border-border/50 px-6 py-3">
-        <h1 className="font-headline text-lg font-bold text-primary glow-primary">
-          DeFi Copilot
-        </h1>
+      {/* Header — Marina TopBar style */}
+      <header className="fixed top-0 z-50 flex w-full items-center justify-between bg-transparent px-6 py-4 backdrop-blur-3xl shadow-[0_8px_32px_0_rgba(143,245,255,0.08)]">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <span className="text-lg">🤖</span>
+          </div>
+          <span className="font-headline text-lg font-bold tracking-tight text-primary">
+            DeFi Copilot
+          </span>
+        </div>
         <WalletButton />
       </header>
 
-      {/* Memory setup prompt */}
-      <MemorySetup />
-
-      {/* Main area — character left + chat right */}
-      <main className="flex flex-1 overflow-hidden">
-        {/* Character panel — only show when connected */}
+      {/* Main area */}
+      <main className="flex flex-1 overflow-hidden pt-20">
+        {/* Character panel */}
         {walletAddress && (
-          <div className="hidden w-[320px] flex-col items-center justify-center border-r border-border/30 lg:flex">
-            {/* Glow effect */}
-            <div className="absolute h-[300px] w-[300px] rounded-full bg-primary/5 blur-3xl" />
-            <SpriteCharacter animation={animation} size={260} fps={6} />
-            <p className="mt-4 text-xs uppercase tracking-[3px] text-muted-foreground">
-              {animation === "thinking"
-                ? "Processing"
-                : animation === "happy"
-                  ? "Success"
-                  : animation === "sad"
-                    ? "Error"
-                    : "Awaiting Input"}
-            </p>
+          <div className="relative hidden w-[300px] flex-col items-center justify-center lg:flex">
+            {/* Glow */}
+            <div className="absolute h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px]" />
+            <div className="relative z-10">
+              <SpriteCharacter animation={animation} size={240} fps={6} />
+            </div>
+            {/* Status */}
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                {animation === "thinking"
+                  ? "Processing"
+                  : animation === "happy"
+                    ? "Complete"
+                    : animation === "sad"
+                      ? "Error"
+                      : "Awaiting Input"}
+              </span>
+              <div className="h-0.5 w-12 rounded-full bg-primary shadow-[0_0_10px_#8ff5ff]" />
+            </div>
           </div>
         )}
 
         {/* Chat area */}
         <div className="flex flex-1 flex-col overflow-hidden">
+          <MemorySetup />
           <ChatContainer />
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="flex items-center justify-center border-t border-border/30 px-6 py-2">
-        <span className="text-xs text-muted-foreground">
+      <footer className="flex items-center justify-center py-2">
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50">
           🐘 Powered by Walrus Memory
         </span>
       </footer>

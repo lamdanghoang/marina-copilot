@@ -64,7 +64,13 @@ export function SpriteCharacter({ animation, size = 280, fps = 6 }: SpriteCharac
 
   return (
     <div
-      style={{ width: frameW, height: frameH, overflow: "hidden", position: "relative" }}
+      style={{
+        width: frameW,
+        height: frameH,
+        overflow: "hidden",
+        position: "relative",
+        borderRadius: "8px",
+      }}
     >
       <img
         src={sheet}
@@ -75,7 +81,7 @@ export function SpriteCharacter({ animation, size = 280, fps = 6 }: SpriteCharac
           position: "absolute",
           left: -col * frameW,
           top: -row * frameH,
-          imageRendering: "auto",
+          maxWidth: "none",
         }}
         draggable={false}
       />

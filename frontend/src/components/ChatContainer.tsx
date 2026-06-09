@@ -19,7 +19,6 @@ export function ChatContainer() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll when new messages arrive or processing state changes
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isProcessing, currentPreview]);
@@ -29,50 +28,47 @@ export function ChatContainer() {
   return (
     <div className="flex h-full flex-col">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
-          {messages.length === 0 && isWalletConnected && (
-            <WelcomeMessage />
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-6 py-6">
+        <div className="mx-auto flex max-w-3xl flex-col gap-8">
+          {/* Date separator */}
+          {isWalletConnected && (
+            <div className="flex justify-center">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50">
+                Today
+              </span>
+            </div>
           )}
 
-          {!isWalletConnected && (
-            <ConnectPrompt />
-          )}
+          {messages.length === 0 && isWalletConnected && <WelcomeMessage />}
+          {!isWalletConnected && <ConnectPrompt />}
 
           {messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
 
-          {isProcessing && (
-            <TypingIndicator statusText={statusText} />
-          )}
+          {isProcessing && <TypingIndicator statusText={statusText} />}
 
           {currentPreview && !isProcessing && (
-            <div className="flex justify-start">
-              <div className="max-w-[90%]">
-                <PTBPreview
-                  preview={currentPreview}
-                  onConfirm={confirmTransaction}
-                  onCancel={cancelPreview}
-                  isExecuting={isProcessing}
-                />
-              </div>
+            <div className="max-w-[90%]">
+              <PTBPreview
+                preview={currentPreview}
+                onConfirm={confirmTransaction}
+                onCancel={cancelPreview}
+                isExecuting={isProcessing}
+              />
             </div>
           )}
 
-          {/* Scroll anchor */}
           <div ref={scrollRef} />
         </div>
       </div>
 
-      {/* Input area */}
+      {/* Input */}
       <ChatInput
         onSend={sendMessage}
         isDisabled={isProcessing || !isWalletConnected}
         placeholder={
-          !isWalletConnected
-            ? "Connect your wallet to start chatting"
-            : undefined
+          !isWalletConnected ? "Connect wallet to start" : undefined
         }
       />
     </div>
@@ -81,16 +77,13 @@ export function ChatContainer() {
 
 function WelcomeMessage() {
   return (
-    <div className="flex justify-start">
-      <div className="max-w-[75%] rounded-lg bg-muted px-4 py-3 text-sm">
-        <p className="font-medium">👋 Welcome! I&apos;m your DeFi Copilot.</p>
-        <p className="mt-2 text-muted-foreground">I can help you:</p>
-        <ul className="mt-1 list-inside list-disc text-muted-foreground">
-          <li>Swap tokens</li>
-          <li>Stake SUI</li>
-        </ul>
-        <p className="mt-2 text-muted-foreground">
-          Just tell me what you&apos;d like to do.
+    <div className="flex flex-col items-start gap-1.5 max-w-[85%]">
+      <span className="ml-1 text-[10px] uppercase tracking-widest text-primary opacity-70">
+        Marina
+      </span>
+      <div className="glass-panel rounded-xl rounded-tl-none border border-border/10 p-4 shadow-[0_40px_40px_-20px_rgba(143,245,255,0.05)]">
+        <p className="text-sm leading-relaxed">
+          👋 Hello! I&apos;m your DeFi Copilot on Sui. I can help you swap tokens, stake SUI, and check your portfolio. Just tell me what you&apos;d like to do.
         </p>
       </div>
     </div>
@@ -99,12 +92,15 @@ function WelcomeMessage() {
 
 function ConnectPrompt() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <p className="text-lg font-medium text-foreground">
-        🔒 Connect your wallet to start chatting
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="h-16 w-16 rounded-full border border-primary/20 bg-primary/5 flex items-center justify-center mb-4">
+        <span className="text-2xl">🔒</span>
+      </div>
+      <p className="font-headline text-lg font-bold text-foreground">
+        Connect your wallet
       </p>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Your AI-powered DeFi assistant on Sui
+      <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+        to start your DeFi journey
       </p>
     </div>
   );
