@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — PTB Compiler Unit Tests
+// Marina Copilot — PTB Compiler Unit Tests
 // ============================================================
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

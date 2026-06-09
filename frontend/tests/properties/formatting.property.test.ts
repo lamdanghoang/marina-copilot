@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Formatting Property-Based Tests
+// Marina Copilot — Formatting Property-Based Tests
 // Property 15: Wallet address truncation and balance formatting
 // ============================================================
 
@@ -25,7 +25,7 @@ const suiBalanceArb: fc.Arbitrary<bigint> = fc
 
 // --- Property 15: Wallet address truncation and balance formatting ---
 
-describe("Feature: defi-copilot-hackathon, Property 15: Wallet address truncation and balance formatting", () => {
+describe("Feature: marina-copilot-hackathon, Property 15: Wallet address truncation and balance formatting", () => {
   it("for any valid Sui address (66 chars), truncation shows first 4 hex + '...' + last 4 hex", () => {
     fc.assert(
       fc.property(suiAddressArb, (address) => {

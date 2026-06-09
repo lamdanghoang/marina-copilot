@@ -1,4 +1,4 @@
-# DeFi Copilot — Deployment Guide
+# Marina Copilot — Deployment Guide
 
 ## Architecture
 
@@ -94,7 +94,7 @@ Copy the endpoint URL from the deploy output and set it as `NEXT_PUBLIC_API_URL`
 
 The backend CORS is controlled by the `CORS_ORIGIN` environment variable:
 - **Local**: `http://localhost:3000`
-- **Production**: Your Vercel deployment URL (e.g. `https://defi-copilot.vercel.app`)
+- **Production**: Your Vercel deployment URL (e.g. `https://marina-copilot.vercel.app`)
 
 The Express CORS middleware allows:
 - Methods: GET, POST, OPTIONS
@@ -125,7 +125,7 @@ The Express CORS middleware allows:
 ## Troubleshooting
 
 ### Lambda not responding
-- Check CloudWatch Logs: `/aws/lambda/defi-copilot-backend-dev-api`
+- Check CloudWatch Logs: `/aws/lambda/marina-copilot-backend-dev-api`
 - Verify IAM role has Bedrock permissions
 
 ### CORS errors in browser

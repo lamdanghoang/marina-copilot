@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — PTB Compiler Service
+// Marina Copilot — PTB Compiler Service
 // Converts structured intents into executable Sui PTBs
 // ============================================================
 

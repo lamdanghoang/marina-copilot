@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Health Check Route
+// Marina Copilot — Health Check Route
 // GET /api/health
 // ============================================================
 

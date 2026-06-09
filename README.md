@@ -1,4 +1,4 @@
-# DeFi Copilot
+# Marina Copilot
 
 **Your AI-powered DeFi assistant on Sui — just say what you want.**
 
@@ -15,7 +15,7 @@ DeFi on Sui is powerful, but using it requires understanding liquidity pools, sl
 
 ## The Solution
 
-DeFi Copilot lets you interact with DeFi through conversation. Type your financial goal in plain English — the AI handles everything else safely.
+Marina Copilot lets you interact with DeFi through conversation. Type your financial goal in plain English — the AI handles everything else safely.
 
 ```
 You: "Swap 100 USDC to SUI"
@@ -41,7 +41,7 @@ Copilot: Compiling transaction...
 
 ## Why This Is Not "Just a Chatbot"
 
-| Generic LLM wrapper | DeFi Copilot |
+| Generic LLM wrapper | Marina Copilot |
 |---------------------|--------------|
 | Parses text → calls API | **Reasons** about your financial goals, compares protocols, recommends with explanation |
 | No risk awareness | **Guardian AI** catches slippage (>1%) and concentration risk (>70% single-asset) before every transaction |
@@ -54,7 +54,7 @@ Copilot: Compiling transaction...
 
 🎬 **[Demo Video (YouTube)](https://youtube.com/...)** *(≤ 5 min)*
 
-🌐 **[Live App](https://defi-copilot.vercel.app)** — Connect your Sui Testnet wallet and try it
+🌐 **[Live App](https://marina-copilot.vercel.app)** — Connect your Sui Testnet wallet and try it
 
 ---
 

@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Token Configuration (Sui Testnet)
+// Marina Copilot — Token Configuration (Sui Testnet)
 // ============================================================
 
 export interface TokenConfig {

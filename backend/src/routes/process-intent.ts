@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Process Intent Route (Orchestrator)
+// Marina Copilot — Process Intent Route (Orchestrator)
 // POST /api/process-intent
 // Pipeline: recall memories → parse intent → compile PTB →
 //           assess risks → return preview + transactionBytes

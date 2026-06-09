@@ -55,7 +55,7 @@ Preview + Confirm → Execute → Remember
 
 | Field | Requirement | Status |
 |-------|-------------|--------|
-| Project Name | Clear + simple | ⬜ "DeFi Copilot" |
+| Project Name | Clear + simple | ⬜ "Marina Copilot" |
 | Description | What it does, why it matters | ⬜ |
 | Project Logo | 1:1 ratio (JPG/PNG) | ⬜ |
 | Public GitHub Repo | Required public during judging | ⬜ |

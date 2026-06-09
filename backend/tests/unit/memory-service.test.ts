@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Memory Service Unit Tests
+// Marina Copilot — Memory Service Unit Tests
 // ============================================================
 
 import { describe, it, expect, beforeEach, vi } from "vitest";

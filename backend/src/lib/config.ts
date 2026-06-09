@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Centralized Configuration
+// Marina Copilot — Centralized Configuration
 // Reads from environment variables with sensible defaults
 // ============================================================
 

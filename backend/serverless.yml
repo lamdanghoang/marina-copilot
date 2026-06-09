@@ -1,9 +1,9 @@
 # ============================================================
-# DeFi Copilot — Backend Serverless Framework Configuration
+# Marina Copilot — Backend Serverless Framework Configuration
 # Deploys Express app as AWS Lambda behind API Gateway
 # ============================================================
 
-service: defi-copilot-backend
+service: marina-copilot-backend
 
 frameworkVersion: "3"
 
@@ -16,7 +16,7 @@ provider:
   timeout: 30
   environment:
     NODE_ENV: production
-    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://defi-copilot.vercel.app'}
+    CORS_ORIGIN: ${env:CORS_ORIGIN, 'https://marina-copilot.vercel.app'}
     AWS_BEDROCK_REGION: ${env:AWS_REGION, 'us-east-1'}
     BEDROCK_MODEL_ID: ${env:BEDROCK_MODEL_ID, 'anthropic.claude-sonnet-4-20250514'}
     SUI_RPC_URL: ${env:SUI_RPC_URL, 'https://fullnode.testnet.sui.io:443'}

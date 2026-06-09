@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Memory Service Property-Based Tests
+// Marina Copilot — Memory Service Property-Based Tests
 // Properties 16-18
 // ============================================================
 
@@ -32,7 +32,7 @@ const preferenceCategoryArb = fc.constantFrom("dex", "slippage", "validator");
 
 // --- Property 16: Memory record completeness on store ---
 
-describe("Feature: defi-copilot-hackathon, Property 16: Memory record completeness on store", () => {
+describe("Feature: marina-copilot-hackathon, Property 16: Memory record completeness on store", () => {
   it("for any stored transaction, record contains: action type, tokens, amounts, protocol, outcome, timestamp within 5s", async () => {
     await fc.assert(
       fc.asyncProperty(
@@ -90,7 +90,7 @@ describe("Feature: defi-copilot-hackathon, Property 16: Memory record completene
 
 // --- Property 17: Preference overwrite semantics ---
 
-describe("Feature: defi-copilot-hackathon, Property 17: Preference overwrite semantics", () => {
+describe("Feature: marina-copilot-hackathon, Property 17: Preference overwrite semantics", () => {
   it("for any two preference stores of same category, only the latest is returned on recall", async () => {
     await fc.assert(
       fc.asyncProperty(
@@ -138,7 +138,7 @@ describe("Feature: defi-copilot-hackathon, Property 17: Preference overwrite sem
 
 // --- Property 18: Memory indicator names applied preference ---
 
-describe("Feature: defi-copilot-hackathon, Property 18: Memory indicator names applied preference", () => {
+describe("Feature: marina-copilot-hackathon, Property 18: Memory indicator names applied preference", () => {
   it("for any applied preference, memory indicator contains the category name and preference value", () => {
     const dexNames = ["Cetus", "Turbos", "KriyaDex", "DeepBook"];
 

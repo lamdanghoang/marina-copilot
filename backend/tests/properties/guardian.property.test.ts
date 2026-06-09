@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Guardian Property-Based Tests
+// Marina Copilot — Guardian Property-Based Tests
 // Properties 8-12, 22
 // ============================================================
 
@@ -60,7 +60,7 @@ const diversifiedPortfolioArb: fc.Arbitrary<PortfolioBalance[]> = fc
 
 // --- Property 8: Guardian slippage detection with data ---
 
-describe("Feature: defi-copilot-hackathon, Property 8: Guardian slippage detection with data", () => {
+describe("Feature: marina-copilot-hackathon, Property 8: Guardian slippage detection with data", () => {
   it("for any swap with priceImpact > 1%, Guardian produces slippage warning with impact percentage and estimated loss", () => {
     fc.assert(
       fc.property(
@@ -97,7 +97,7 @@ describe("Feature: defi-copilot-hackathon, Property 8: Guardian slippage detecti
 
 // --- Property 9: Guardian concentration detection with data ---
 
-describe("Feature: defi-copilot-hackathon, Property 9: Guardian concentration detection with data", () => {
+describe("Feature: marina-copilot-hackathon, Property 9: Guardian concentration detection with data", () => {
   it("for any transaction where resulting single-asset > 70%, Guardian produces concentration warning with percentage", () => {
     fc.assert(
       fc.property(
@@ -150,7 +150,7 @@ describe("Feature: defi-copilot-hackathon, Property 9: Guardian concentration de
 
 // --- Property 10: All risk warnings contain explanation and suggestion ---
 
-describe("Feature: defi-copilot-hackathon, Property 10: All risk warnings contain explanation and suggestion", () => {
+describe("Feature: marina-copilot-hackathon, Property 10: All risk warnings contain explanation and suggestion", () => {
   it("for any Guardian output with risks, every risk has non-empty explanation AND suggestion", () => {
     fc.assert(
       fc.property(
@@ -201,7 +201,7 @@ describe("Feature: defi-copilot-hackathon, Property 10: All risk warnings contai
 
 // --- Property 11: No risks detected implies safe assessment ---
 
-describe("Feature: defi-copilot-hackathon, Property 11: No risks detected implies safe assessment", () => {
+describe("Feature: marina-copilot-hackathon, Property 11: No risks detected implies safe assessment", () => {
   it("for any swap with priceImpact ≤ 1% AND concentration ≤ 70%, assessment = safe with empty risks", () => {
     fc.assert(
       fc.property(
@@ -259,7 +259,7 @@ describe("Feature: defi-copilot-hackathon, Property 11: No risks detected implie
 
 // --- Property 12: Non-swap transactions skip slippage check ---
 
-describe("Feature: defi-copilot-hackathon, Property 12: Non-swap transactions skip slippage check", () => {
+describe("Feature: marina-copilot-hackathon, Property 12: Non-swap transactions skip slippage check", () => {
   it("for any stake transaction, Guardian never produces HIGH_SLIPPAGE warning", () => {
     fc.assert(
       fc.property(
@@ -290,7 +290,7 @@ describe("Feature: defi-copilot-hackathon, Property 12: Non-swap transactions sk
 
 // --- Property 22: Cumulative concentration considers transaction history ---
 
-describe("Feature: defi-copilot-hackathon, Property 22: Cumulative concentration considers transaction history", () => {
+describe("Feature: marina-copilot-hackathon, Property 22: Cumulative concentration considers transaction history", () => {
   it("for any combination of portfolio + pending tx + 30-day history, cumulative concentration correctly flags when > 70%", () => {
     fc.assert(
       fc.property(

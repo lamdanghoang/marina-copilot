@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Intent Parser Property-Based Tests
+// Marina Copilot — Intent Parser Property-Based Tests
 // Properties 1-3, 19-21
 // ============================================================
 
@@ -154,7 +154,7 @@ const unsupportedTokenArb = fc.string({ minLength: 2, maxLength: 10 })
 
 // --- Property 1: Incomplete intent produces clarification naming all missing fields ---
 
-describe("Feature: defi-copilot-hackathon, Property 1: Incomplete intent produces clarification naming all missing fields", () => {
+describe("Feature: marina-copilot-hackathon, Property 1: Incomplete intent produces clarification naming all missing fields", () => {
   it("for any swap intent missing fields, clarification names each missing field", () => {
     // Generate partial swap intents with at least one field missing
     const partialSwapArb = fc.record({
@@ -214,7 +214,7 @@ describe("Feature: defi-copilot-hackathon, Property 1: Incomplete intent produce
 
 // --- Property 2: Unknown token produces error containing that exact symbol ---
 
-describe("Feature: defi-copilot-hackathon, Property 2: Unknown token produces error naming the unrecognized symbol", () => {
+describe("Feature: marina-copilot-hackathon, Property 2: Unknown token produces error naming the unrecognized symbol", () => {
   it("for any unknown token symbol, error response contains that exact symbol", () => {
     fc.assert(
       fc.property(unsupportedTokenArb, (unknownSymbol) => {
@@ -247,7 +247,7 @@ describe("Feature: defi-copilot-hackathon, Property 2: Unknown token produces er
 
 // --- Property 3: Memory preferences become intent defaults without clarification ---
 
-describe("Feature: defi-copilot-hackathon, Property 3: Memory preferences become intent defaults without clarification", () => {
+describe("Feature: marina-copilot-hackathon, Property 3: Memory preferences become intent defaults without clarification", () => {
   it("for any recalled DEX preference + swap without dex specified, result uses preference as default without clarification", () => {
     const dexNames = ["Cetus", "Turbos", "KriyaDex", "DeepBook"];
     const dexNameArb = fc.constantFrom(...dexNames);
@@ -291,7 +291,7 @@ describe("Feature: defi-copilot-hackathon, Property 3: Memory preferences become
 
 // --- Property 19: Message input validation ---
 
-describe("Feature: defi-copilot-hackathon, Property 19: Message input validation", () => {
+describe("Feature: marina-copilot-hackathon, Property 19: Message input validation", () => {
   it("non-empty trimmed string submits; empty/whitespace-only does not", () => {
     // Test non-empty strings
     fc.assert(
@@ -320,7 +320,7 @@ describe("Feature: defi-copilot-hackathon, Property 19: Message input validation
 
 // --- Property 20: LLM context assembly completeness ---
 
-describe("Feature: defi-copilot-hackathon, Property 20: LLM context assembly completeness", () => {
+describe("Feature: marina-copilot-hackathon, Property 20: LLM context assembly completeness", () => {
   it("LLM context always includes: user message, up to 10 memories, balances", () => {
     const memoryArb: fc.Arbitrary<MemoryRecord> = fc.record({
       id: fc.uuid(),
@@ -382,7 +382,7 @@ describe("Feature: defi-copilot-hackathon, Property 20: LLM context assembly com
 
 // --- Property 21: LLM response parsing produces valid structured output ---
 
-describe("Feature: defi-copilot-hackathon, Property 21: LLM response parsing produces valid structured output", () => {
+describe("Feature: marina-copilot-hackathon, Property 21: LLM response parsing produces valid structured output", () => {
   it("LLM response parsing produces either valid intent OR clarification, never both null", () => {
     const validIntentArb: fc.Arbitrary<StructuredIntent> = fc.oneof(
       fc.record({

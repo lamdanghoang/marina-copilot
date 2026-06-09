@@ -1,4 +1,4 @@
-# DeFi Copilot — Implementation Plan
+# Marina Copilot — Implementation Plan
 
 ## Architecture Overview
 
@@ -32,7 +32,7 @@ Intelligence Distribution:
 
 ## What Makes This NOT an LLM Wrapper
 
-| Component | LLM Wrapper Would | DeFi Copilot Does |
+| Component | LLM Wrapper Would | Marina Copilot Does |
 |-----------|-------------------|-------------------|
 | Intent | "Parse text → JSON" | Reason about financial goals, compare protocols, recommend with explanation |
 | Execution | "Call a swap API" | Build Sui PTBs (multi-step atomic), handle coin objects, find routes |

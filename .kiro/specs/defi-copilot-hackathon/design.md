@@ -1,8 +1,8 @@
-# Design Document: DeFi Copilot
+# Design Document: Marina Copilot
 
 ## Overview
 
-DeFi Copilot is a conversational AI assistant that converts natural-language financial goals into safe, one-click transactions on the Sui blockchain. The system follows a pipeline architecture: parse intent → compile PTB → assess risk → preview → confirm → execute → remember.
+Marina Copilot is a conversational AI assistant that converts natural-language financial goals into safe, one-click transactions on the Sui blockchain. The system follows a pipeline architecture: parse intent → compile PTB → assess risk → preview → confirm → execute → remember.
 
 The MVP targets two hackathon tracks:
 - **Agentic Web (Intent Engine)**: text → PTB → execution with human-readable preview and guardian risk checks
@@ -702,7 +702,7 @@ This feature contains significant deterministic logic (Guardian risk calculation
 
 **Configuration**:
 - Minimum 100 iterations per property test
-- Each test tagged with: `Feature: defi-copilot-hackathon, Property {N}: {title}`
+- Each test tagged with: `Feature: marina-copilot-hackathon, Property {N}: {title}`
 
 **Property tests cover**:
 - Guardian risk detection logic (Properties 8, 9, 10, 11, 12, 22)

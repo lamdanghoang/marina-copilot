@@ -83,7 +83,7 @@ function WelcomeMessage() {
       </span>
       <div className="glass-panel rounded-xl rounded-tl-none border border-border/10 p-4 shadow-[0_40px_40px_-20px_rgba(143,245,255,0.05)]">
         <p className="text-sm leading-relaxed">
-          👋 Hello! I&apos;m your DeFi Copilot on Sui. I can help you swap tokens, stake SUI, and check your portfolio. Just tell me what you&apos;d like to do.
+          👋 Hello! I&apos;m your Marina Copilot on Sui. I can help you swap tokens, stake SUI, and check your portfolio. Just tell me what you&apos;d like to do.
         </p>
       </div>
     </div>

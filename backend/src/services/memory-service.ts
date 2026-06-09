@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Memory Service
+// Marina Copilot — Memory Service
 // Per-user MemWal accounts with InMemory fallback
 // Graceful degradation: recall → empty array, remember → silent fail
 // ============================================================
@@ -22,7 +22,7 @@ function createMemWalClient(creds: UserMemwalCredentials): ReturnType<typeof Mem
     key: creds.delegateKey,
     accountId: creds.accountId,
     serverUrl: config.memwal.serverUrl,
-    namespace: "defi-copilot",
+    namespace: "marina-copilot",
   });
 }
 

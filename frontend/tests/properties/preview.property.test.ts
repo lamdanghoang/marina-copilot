@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Preview & Success Message Property-Based Tests
+// Marina Copilot — Preview & Success Message Property-Based Tests
 // Properties 13-14
 // ============================================================
 
@@ -111,7 +111,7 @@ const digestArb: fc.Arbitrary<string> = fc
 
 // --- Property 13: Preview renders complete data for its response type ---
 
-describe("Feature: defi-copilot-hackathon, Property 13: Preview renders complete data for its response type", () => {
+describe("Feature: marina-copilot-hackathon, Property 13: Preview renders complete data for its response type", () => {
   it("for any preview response with swap, rendered includes: numbered steps, exchange rate, min received, price impact, gas", () => {
     fc.assert(
       fc.property(swapMetadataArb, (metadata) => {
@@ -188,7 +188,7 @@ describe("Feature: defi-copilot-hackathon, Property 13: Preview renders complete
 
 // --- Property 14: Success message contains all required fields ---
 
-describe("Feature: defi-copilot-hackathon, Property 14: Success message contains all required fields", () => {
+describe("Feature: marina-copilot-hackathon, Property 14: Success message contains all required fields", () => {
   it("for any success message, includes: action summary, digest truncated to first 8 + last 4 chars, valid Explorer URL", () => {
     fc.assert(
       fc.property(

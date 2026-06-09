@@ -2,7 +2,7 @@
 
 ## Introduction
 
-DeFi Copilot is a conversational AI assistant for the Sui blockchain that turns plain-language financial goals into safe, one-click transactions. It targets two tracks in the Sui Overflow 2026 hackathon: Agentic Web (Sub-track 3: Intent Engine) and the Walrus Track.
+Marina Copilot is a conversational AI assistant for the Sui blockchain that turns plain-language financial goals into safe, one-click transactions. It targets two tracks in the Sui Overflow 2026 hackathon: Agentic Web (Sub-track 3: Intent Engine) and the Walrus Track.
 
 The system parses natural-language intents, compiles them into Sui Programmable Transaction Blocks (PTBs), runs a guardian risk check surfacing warnings in plain language, requires explicit user confirmation before execution, and persists memory across sessions via Walrus (MemWal) so the agent becomes more useful over time.
 
@@ -10,7 +10,7 @@ MVP scope (solo developer, 10 days): Swap (primary intent), Stake (secondary int
 
 ## Glossary
 
-- **Copilot**: The DeFi Copilot application — the conversational AI system under development
+- **Copilot**: The Marina Copilot application — the conversational AI system under development
 - **Intent_Parser**: The AI subsystem that interprets user natural-language messages into structured intent objects
 - **PTB_Compiler**: The subsystem that transforms structured intents into executable Sui Programmable Transaction Blocks
 - **Guardian**: The risk assessment subsystem that analyzes compiled PTBs for slippage and concentration risks before preview

@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "DeFi Copilot",
+  title: "Marina Copilot",
   description: "Conversational AI assistant for Sui blockchain DeFi",
 };
 

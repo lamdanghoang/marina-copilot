@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Guardian Service Unit Tests
+// Marina Copilot — Guardian Service Unit Tests
 // ============================================================
 
 import { describe, it, expect } from "vitest";

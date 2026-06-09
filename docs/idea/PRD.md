@@ -1,10 +1,10 @@
-# DeFi Copilot — Product Requirements Document
+# Marina Copilot — Product Requirements Document
 
 ## 1. Overview
 
 | Field | Detail |
 |-------|--------|
-| Product Name | DeFi Copilot |
+| Product Name | Marina Copilot |
 | Hackathon | Sui Overflow 2026 |
 | Tracks | Agentic Web (Sub-track 3: Intent Engine) + Walrus |
 | Target Users | Non-technical crypto holders who want DeFi access without complexity |
@@ -168,7 +168,7 @@ DeFi on Sui is powerful but requires users to:
 
 ```
 ┌────────────────────────────────────────────────────┐
-│                  DeFi Copilot                        │
+│                  Marina Copilot                        │
 ├──────────┬─────────────────────────────────────────┤
 │          │                                          │
 │  Memory  │  💬 "Swap 100 USDC to SUI"              │

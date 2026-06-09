@@ -13,7 +13,7 @@ Used for deterministic logic in backend services (Guardian, PTB Compiler, Intent
 import { describe, it, expect } from 'vitest';
 import { fc } from '@fast-check/vitest';
 
-describe('Feature: defi-copilot-hackathon, Property 8: Guardian slippage detection', () => {
+describe('Feature: marina-copilot-hackathon, Property 8: Guardian slippage detection', () => {
   it.prop([fc.float({ min: 1.01, max: 100 })])('flags slippage when impact > 1%', (priceImpact) => {
     const result = assessRisks({ priceImpact, ... });
     expect(result.risks).toContainEqual(expect.objectContaining({ class: 'HIGH_SLIPPAGE' }));
@@ -23,7 +23,7 @@ describe('Feature: defi-copilot-hackathon, Property 8: Guardian slippage detecti
 
 ### Rules
 - Minimum 100 iterations per property (default in fast-check)
-- Tag each test: `Feature: defi-copilot-hackathon, Property {N}: {title}`
+- Tag each test: `Feature: marina-copilot-hackathon, Property {N}: {title}`
 - Generators should cover edge cases: 0, negative, max values, empty strings
 - Test pure functions — mock external services (Cetus, Bedrock, MemWal)
 

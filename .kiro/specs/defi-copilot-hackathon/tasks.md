@@ -1,8 +1,8 @@
-# Implementation Plan: DeFi Copilot
+# Implementation Plan: Marina Copilot
 
 ## Overview
 
-DeFi Copilot is a conversational AI assistant for the Sui blockchain that converts natural-language intents into safe, one-click transactions. The implementation follows a pipeline architecture (parse → compile → assess → preview → confirm → execute → remember) with a single merged LLM call for minimal latency.
+Marina Copilot is a conversational AI assistant for the Sui blockchain that converts natural-language intents into safe, one-click transactions. The implementation follows a pipeline architecture (parse → compile → assess → preview → confirm → execute → remember) with a single merged LLM call for minimal latency.
 
 The plan is structured around the 10-day hackathon timeline with each day ending in a demoable state. Day 4 = MVP submittable (swap e2e working). Architecture: Frontend (Next.js on Vercel) and Backend (Express on AWS Lambda) deployed independently, communicating via REST API.
 

@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — PTB Compiler Property-Based Tests
+// Marina Copilot — PTB Compiler Property-Based Tests
 // Properties 4-7
 // ============================================================
 
@@ -110,7 +110,7 @@ const validatorNameArb = fc.constantFrom(
 
 // --- Property 4: Compiled transaction metadata contains all required fields ---
 
-describe("Feature: defi-copilot-hackathon, Property 4: Compiled transaction metadata contains all required fields", () => {
+describe("Feature: marina-copilot-hackathon, Property 4: Compiled transaction metadata contains all required fields", () => {
   it("for any successfully compiled swap, metadata has: route, exchangeRate, estimatedOutput, minimumOutput, priceImpact, gasEstimate", () => {
     fc.assert(
       fc.property(
@@ -169,7 +169,7 @@ describe("Feature: defi-copilot-hackathon, Property 4: Compiled transaction meta
 
 // --- Property 5: Insufficient balance error includes available balance and required amount ---
 
-describe("Feature: defi-copilot-hackathon, Property 5: Insufficient balance error includes available and required", () => {
+describe("Feature: marina-copilot-hackathon, Property 5: Insufficient balance error includes available and required", () => {
   it("for any insufficient balance scenario, error contains available balance value AND required amount value", () => {
     fc.assert(
       fc.property(
@@ -200,7 +200,7 @@ describe("Feature: defi-copilot-hackathon, Property 5: Insufficient balance erro
 
 // --- Property 6: Default slippage tolerance calculation ---
 
-describe("Feature: defi-copilot-hackathon, Property 6: Default slippage tolerance calculation", () => {
+describe("Feature: marina-copilot-hackathon, Property 6: Default slippage tolerance calculation", () => {
   it("for any swap without explicit slippage, minimumOutput = estimatedOutput * 0.99", () => {
     fc.assert(
       fc.property(
@@ -229,7 +229,7 @@ describe("Feature: defi-copilot-hackathon, Property 6: Default slippage toleranc
 
 // --- Property 7: Highest APY validator selection ---
 
-describe("Feature: defi-copilot-hackathon, Property 7: Highest APY validator selection", () => {
+describe("Feature: marina-copilot-hackathon, Property 7: Highest APY validator selection", () => {
   interface ValidatorInfo {
     name: string;
     apy: number;

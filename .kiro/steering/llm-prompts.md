@@ -7,7 +7,7 @@ fileMatchPattern: "**/*prompt*,**/*llm*,backend/src/services/intent-parser*"
 
 ## System Prompt Design
 
-The DeFi Copilot uses a single merged LLM call (Claude Sonnet via Bedrock) that combines intent reasoning + risk flagging. The system prompt must:
+The Marina Copilot uses a single merged LLM call (Claude Sonnet via Bedrock) that combines intent reasoning + risk flagging. The system prompt must:
 
 1. Define the AI's role clearly (DeFi financial advisor on Sui)
 2. List available actions with current market data

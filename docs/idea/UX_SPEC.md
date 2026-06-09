@@ -1,4 +1,4 @@
-# DeFi Copilot — UX Specification
+# Marina Copilot — UX Specification
 
 ## 1. User Journey
 
@@ -179,7 +179,7 @@ sequenceDiagram
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  [Logo] DeFi Copilot          [Connect Wallet]   │
+│  [Logo] Marina Copilot          [Connect Wallet]   │
 ├──────────────────────────────────────────────────┤
 │                                                   │
 │              🔒 Connect your wallet               │
@@ -207,10 +207,10 @@ sequenceDiagram
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  [Logo] DeFi Copilot    0x1a2b...3c4d | 124 SUI │
+│  [Logo] Marina Copilot    0x1a2b...3c4d | 124 SUI │
 ├─────────┬────────────────────────────────────────┤
 │         │                                         │
-│ Memory  │   👋 Welcome! I'm your DeFi Copilot.   │
+│ Memory  │   👋 Welcome! I'm your Marina Copilot.   │
 │ Panel   │                                         │
 │         │   I can help you:                       │
 │ (empty) │   • Swap tokens                         │
@@ -241,7 +241,7 @@ sequenceDiagram
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  [Logo] DeFi Copilot    0x1a2b...3c4d | 124 SUI │
+│  [Logo] Marina Copilot    0x1a2b...3c4d | 124 SUI │
 ├─────────┬────────────────────────────────────────┤
 │         │                                         │
 │ Memory  │   👤 "Swap 100 USDC to SUI"            │
@@ -267,7 +267,7 @@ sequenceDiagram
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  [Logo] DeFi Copilot    0x1a2b...3c4d | 124 SUI │
+│  [Logo] Marina Copilot    0x1a2b...3c4d | 124 SUI │
 ├─────────┬────────────────────────────────────────┤
 │         │                                         │
 │ Memory  │   👤 "Swap 100 USDC to SUI"            │
@@ -316,7 +316,7 @@ sequenceDiagram
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  [Logo] DeFi Copilot    0x1a2b...3c4d | 124 SUI │
+│  [Logo] Marina Copilot    0x1a2b...3c4d | 124 SUI │
 ├─────────┬────────────────────────────────────────┤
 │         │                                         │
 │ Memory  │   👤 "Swap 5000 USDC to SUI"           │

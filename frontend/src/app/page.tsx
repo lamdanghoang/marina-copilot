@@ -32,7 +32,7 @@ export default function Home() {
             <span className="text-lg">🤖</span>
           </div>
           <span className="font-headline text-lg font-bold tracking-tight text-primary">
-            DeFi Copilot
+            Marina Copilot
           </span>
         </div>
         <WalletButton />

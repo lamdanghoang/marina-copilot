@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Shared TypeScript Interfaces (Frontend)
+// Marina Copilot — Shared TypeScript Interfaces (Frontend)
 // Mirrors backend types for API communication compatibility
 // ============================================================
 

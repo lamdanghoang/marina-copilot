@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Express App Entry Point
+// Marina Copilot — Express App Entry Point
 // Mounts all route handlers with CORS middleware
 // ============================================================
 

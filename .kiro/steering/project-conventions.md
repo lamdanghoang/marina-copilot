@@ -1,8 +1,8 @@
-# DeFi Copilot — Project Conventions
+# Marina Copilot — Project Conventions
 
 ## Project Overview
 
-DeFi Copilot is a conversational AI assistant on Sui blockchain for the Sui Overflow 2026 hackathon (Agentic Web + Walrus tracks). It converts natural-language financial intents into safe, one-click transactions via Sui PTBs with persistent memory.
+Marina Copilot is a conversational AI assistant on Sui blockchain for the Sui Overflow 2026 hackathon (Agentic Web + Walrus tracks). It converts natural-language financial intents into safe, one-click transactions via Sui PTBs with persistent memory.
 
 ## Tech Stack
 
@@ -134,7 +134,7 @@ Every user message follows: `recall → parse → compile → assess → preview
 
 ### Property-Based Tests (fast-check)
 - Minimum 100 iterations per property
-- Tag: `Feature: defi-copilot-hackathon, Property {N}: {title}`
+- Tag: `Feature: marina-copilot-hackathon, Property {N}: {title}`
 - Cover: Guardian logic, balance validation, formatting, memory semantics, intent parsing
 
 ### Running Tests

@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — LLM Client (AWS Bedrock / Claude Sonnet)
+// Marina Copilot — LLM Client (AWS Bedrock / Claude Sonnet)
 // Single merged call: intent reasoning + risk flagging
 // ============================================================
 

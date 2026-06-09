@@ -11,7 +11,7 @@ const MEMWAL_PACKAGE_ID =
 const MEMWAL_REGISTRY_ID =
   "0xe80f2feec1c139616a86c9f71210152e2a7ca552b20841f2e192f99f75864437";
 
-const STORAGE_KEY = "defi-copilot-memwal";
+const STORAGE_KEY = "marina-copilot-memwal";
 
 export interface MemwalCredentials {
   accountId: string;
@@ -175,7 +175,7 @@ export function useMemwalSetup(walletAddress: string | null) {
           tx2.object(accountId),
           tx2.pure.vector("u8", Array.from(delegate.publicKey)),
           tx2.pure.address(delegate.suiAddress),
-          tx2.pure.string("DeFi Copilot"),
+          tx2.pure.string("Marina Copilot"),
           tx2.object("0x6"),
         ],
       });

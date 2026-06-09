@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Guardian Risk Assessment Service
+// Marina Copilot — Guardian Risk Assessment Service
 // Deterministic risk checks: slippage and concentration
 // Pure function — no async, no external calls, no LLM
 // ============================================================

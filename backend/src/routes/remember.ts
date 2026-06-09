@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Remember Route
+// Marina Copilot — Remember Route
 // POST /api/remember
 // Stores memory records after successful transactions
 // Graceful degradation: always returns 200 even on failure

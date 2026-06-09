@@ -37,7 +37,7 @@ export function ChatInput({ onSend, isDisabled, placeholder }: ChatInputProps) {
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isDisabled}
-            placeholder={placeholder ?? "Message DeFi Copilot..."}
+            placeholder={placeholder ?? "Message Marina Copilot..."}
             aria-label="Message input"
             className="flex-1 border-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />

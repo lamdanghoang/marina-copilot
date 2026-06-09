@@ -1,5 +1,5 @@
 // ============================================================
-// DeFi Copilot — Intent Parser Service
+// Marina Copilot — Intent Parser Service
 // Parses natural-language messages into structured intents
 // using a single merged LLM call (Claude Sonnet via Bedrock)
 // ============================================================
