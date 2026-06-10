@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Courier+Prime&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,23 +6,23 @@
 
 @layer base {
   :root {
-    --background: 192 50% 3%;
-    --foreground: 180 50% 94%;
-    --card: 192 30% 6%;
-    --card-foreground: 180 50% 94%;
-    --primary: 183 95% 76%;
-    --primary-foreground: 192 50% 3%;
-    --secondary: 183 40% 12%;
-    --secondary-foreground: 180 50% 94%;
-    --muted: 192 20% 10%;
-    --muted-foreground: 180 8% 66%;
-    --accent: 183 40% 12%;
-    --accent-foreground: 180 50% 94%;
+    --background: 220 40% 8%;
+    --foreground: 180 20% 90%;
+    --card: 200 25% 10%;
+    --card-foreground: 180 20% 90%;
+    --primary: 183 95% 69%;
+    --primary-foreground: 192 80% 8%;
+    --secondary: 200 20% 15%;
+    --secondary-foreground: 180 20% 90%;
+    --muted: 200 15% 13%;
+    --muted-foreground: 180 10% 75%;
+    --accent: 200 20% 15%;
+    --accent-foreground: 180 20% 90%;
     --destructive: 4 85% 72%;
-    --destructive-foreground: 192 50% 3%;
-    --border: 192 15% 18%;
-    --input: 192 15% 18%;
-    --ring: 183 95% 76%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 180 30% 15%;
+    --input: 180 30% 15%;
+    --ring: 183 95% 69%;
     --radius: 0.75rem;
   }
 
@@ -32,25 +32,20 @@
 
   body {
     @apply bg-background text-foreground font-body;
-    background: linear-gradient(135deg, #0a1617 0%, #102223 100%);
-    min-height: 100vh;
+    background-color: #0A0F1E;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    background: rgba(23, 41, 42, 0.6);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(62, 74, 75, 0.3);
+    background: rgba(18, 25, 43, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 245, 255, 0.15);
   }
 
   .glow-primary {
-    text-shadow: 0 0 12px rgba(143, 245, 255, 0.5);
-  }
-
-  .glow-dot {
-    box-shadow: 0 0 8px rgba(143, 245, 255, 0.6);
+    text-shadow: 0 0 12px rgba(99, 247, 255, 0.5);
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -62,11 +57,11 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(143, 245, 255, 0.1);
+    background: rgba(99, 247, 255, 0.1);
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(143, 245, 255, 0.2);
+    background: rgba(99, 247, 255, 0.2);
   }
 }
