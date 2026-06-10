@@ -130,6 +130,15 @@ DeFi on Sui is powerful but requires users to:
 | FR30 | Display wallet address + SUI balance | P0 |
 | FR31 | All transactions signed by user — app never holds private keys | P0 |
 
+### 7.7 AI Character (Marina)
+
+| ID | Requirement | Priority |
+|----|-------------|----------|
+| FR32 | 2D animated character displayed alongside chat interface | P1 |
+| FR33 | Sprite sheet animation (4×2 grid, 6fps): idle, thinking, talking, happy, sad, waving | P1 |
+| FR34 | Animation state synced with app state: processing→thinking, success→happy, error→sad | P1 |
+| FR35 | Character provides visual feedback — user knows system state without reading text | P1 |
+
 ## 8. Non-Functional Requirements
 
 | ID | Requirement | Target |
