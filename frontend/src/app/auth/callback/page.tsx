@@ -43,7 +43,7 @@ export default function AuthCallback() {
       localStorage.setItem("zklogin_address", suiAddress);
 
       setStatus("Login successful! Redirecting...");
-      setTimeout(() => router.push("/"), 500);
+      setTimeout(() => { window.location.href = "/app"; }, 300);
     } catch (error) {
       console.error("zkLogin callback error:", error);
       setStatus("Login failed. Redirecting...");
@@ -52,11 +52,14 @@ export default function AuthCallback() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
-        <p className="text-sm text-muted-foreground">{status}</p>
+    <>
+      <style>{`nav { display: none !important; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0A0F1E", color: "#dce4e4" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 40, height: 40, border: "2px solid #333", borderTopColor: "#63f7ff", borderRadius: "50%", margin: "0 auto 16px", animation: "spin 1s linear infinite" }} />
+          <p style={{ fontSize: 14 }}>{status}</p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

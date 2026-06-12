@@ -20,14 +20,15 @@ export function useZkLoginSession() {
   const walletAddress = useCopilotStore((s) => s.walletAddress);
 
   useEffect(() => {
-    checkZkLoginSession();
+    // Small delay to ensure storage is ready after redirect
+    const timer = setTimeout(() => checkZkLoginSession(), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const checkZkLoginSession = async () => {
     const address = localStorage.getItem("zklogin_address");
     if (!address) return;
 
-    // Verify JWT still valid
     const jwt = await secureGet("zklogin_jwt");
     if (!jwt) {
       localStorage.removeItem("zklogin_address");

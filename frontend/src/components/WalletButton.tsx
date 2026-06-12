@@ -1,24 +1,27 @@
 "use client";
 
-import { ConnectButton, useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
-import { useEffect } from "react";
+import { useConnectWallet, useWallets, useCurrentAccount, useDisconnectWallet, useSuiClientQuery } from "@mysten/dapp-kit";
+import { useEffect, useState } from "react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useZkLoginSession } from "@/hooks/useZkLoginSession";
-import { ZkLoginButton } from "@/components/ZkLoginButton";
 import { truncateAddress, formatBalance } from "@/lib/formatting";
 
 interface WalletButtonProps {
   className?: string;
+  variant?: "navbar" | "hero";
 }
 
-export function WalletButton({ className }: WalletButtonProps) {
+export function WalletButton({ className, variant = "navbar" }: WalletButtonProps) {
+  const [showWalletList, setShowWalletList] = useState(false);
   const account = useCurrentAccount();
+  const wallets = useWallets();
+  const { mutate: connect, isPending } = useConnectWallet();
+  const { mutate: disconnect } = useDisconnectWallet();
   const connectWallet = useCopilotStore((s) => s.connectWallet);
   const disconnectWallet = useCopilotStore((s) => s.disconnectWallet);
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const { isZkLogin, logout: zkLogout } = useZkLoginSession();
 
-  // Fetch SUI balance for the connected dapp-kit account
   const { data: balanceData } = useSuiClientQuery(
     "getBalance",
     { owner: account?.address ?? "" },
@@ -30,7 +33,6 @@ export function WalletButton({ className }: WalletButtonProps) {
     if (account?.address && balanceData) {
       const rawBalance = BigInt(balanceData.totalBalance);
       const formattedBalance = Number(formatBalance(rawBalance, 9, 2));
-
       connectWallet(account.address, [
         { token: "0x2::sui::SUI", symbol: "SUI", balance: formattedBalance, decimals: 9 },
       ]);
@@ -39,17 +41,15 @@ export function WalletButton({ className }: WalletButtonProps) {
     }
   }, [account, balanceData, connectWallet, disconnectWallet, isZkLogin]);
 
-  // If connected via zkLogin
+  // Connected via zkLogin
   if (isZkLogin && walletAddress) {
     return (
       <div className={`flex items-center gap-3 ${className ?? ""}`}>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-xs text-green-600">zkLogin</span>
-          <span className="font-mono">{truncateAddress(walletAddress)}</span>
-        </div>
+        <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-400 font-bold tracking-wider">zkLogin</span>
+        <span className="font-mono text-xs text-[#63f7ff]">{truncateAddress(walletAddress)}</span>
         <button
           onClick={zkLogout}
-          className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
+          className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
         >
           Disconnect
         </button>
@@ -57,27 +57,37 @@ export function WalletButton({ className }: WalletButtonProps) {
     );
   }
 
-  // If connected via wallet extension
+  // Connected via wallet extension
   if (account?.address && balanceData) {
     return (
       <div className={`flex items-center gap-3 ${className ?? ""}`}>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="font-mono">{truncateAddress(account.address)}</span>
-          <span className="font-medium text-foreground">
+        <span className="font-mono text-xs text-[#63f7ff]">{truncateAddress(account.address)}</span>
+        <div className="flex items-center gap-1.5 rounded-full border border-[rgba(0,245,255,0.2)] bg-[#232b2c] px-3 py-1.5">
+          <span className="text-xs font-bold text-[#63f7ff]">
             {formatBalance(BigInt(balanceData.totalBalance), 9, 2)} SUI
           </span>
         </div>
-        <ConnectButton />
+        <button
+          onClick={() => disconnect()}
+          className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+        >
+          Disconnect
+        </button>
       </div>
     );
   }
 
-  // Not connected — show both options
+  // Not connected — Launch App button that opens modal
+  if (variant === "hero") return null;
+
   return (
-    <div className={`flex items-center gap-2 ${className ?? ""}`}>
-      <ZkLoginButton />
-      <div className="text-xs text-muted-foreground">or</div>
-      <ConnectButton />
+    <div className={`${className ?? ""}`}>
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("open-connect-modal"))}
+        className="flex items-center gap-2 rounded-xl bg-[#63f7ff] px-5 py-2.5 text-sm font-bold text-[#002021] hover:bg-cyan-100 transition-all shadow-[0_0_15px_rgba(99,247,255,0.2)]"
+      >
+        Launch App
+      </button>
     </div>
   );
 }

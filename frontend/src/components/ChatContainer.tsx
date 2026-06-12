@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useCopilotStore } from "@/store/copilot-store";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
@@ -16,6 +17,7 @@ export function ChatContainer() {
   const currentPreview = useCopilotStore((s) => s.currentPreview);
   const confirmTransaction = useCopilotStore((s) => s.confirmTransaction);
   const cancelPreview = useCopilotStore((s) => s.cancelPreview);
+  const account = useCurrentAccount();
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +25,7 @@ export function ChatContainer() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isProcessing, currentPreview]);
 
-  const isWalletConnected = !!walletAddress;
+  const isWalletConnected = !!walletAddress || !!account?.address;
 
   return (
     <div className="flex h-full flex-col">

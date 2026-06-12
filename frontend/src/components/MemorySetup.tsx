@@ -10,8 +10,9 @@ import { useCopilotStore } from "@/store/copilot-store";
  * Renders setup prompt if user hasn't set up memory yet.
  */
 export function MemorySetup() {
+  const storeWalletAddress = useCopilotStore((s) => s.walletAddress);
   const account = useCurrentAccount();
-  const walletAddress = account?.address ?? null;
+  const walletAddress = storeWalletAddress || account?.address || null;
   const setMemwalCredentials = useCopilotStore((s) => s.setMemwalCredentials);
 
   const { credentials, hasAccount, isSettingUp, checkAccount, setup } =
