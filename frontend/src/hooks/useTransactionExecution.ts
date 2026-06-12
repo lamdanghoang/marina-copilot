@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback } from "react";
-import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { useCopilotStore } from "@/store/copilot-store";
 import { remember } from "@/lib/api-client";
+import { formatBalance } from "@/lib/formatting";
 import type { ChatMessage, TransactionMetadata } from "@/types";
 
 const TX_TIMEOUT_MS = 60_000;
@@ -104,6 +105,7 @@ function isWalletRejection(error: unknown): boolean {
 export function useTransactionExecution() {
   const { mutateAsync: signAndExecuteTransaction } =
     useSignAndExecuteTransaction();
+  const suiClient = useSuiClient();
 
   const executeTransaction = useCallback(async () => {
     const store = useCopilotStore.getState();
@@ -187,6 +189,18 @@ export function useTransactionExecution() {
       } catch {
         // Silent degradation: memory store failure doesn't affect success display
         console.warn("Failed to store transaction memory");
+      }
+
+      // Refetch balance after successful tx
+      try {
+        const balanceResult = await suiClient.getBalance({ owner: walletAddress });
+        const rawBalance = BigInt(balanceResult.totalBalance);
+        const formattedBalance = Number(formatBalance(rawBalance, 9, 2));
+        useCopilotStore.getState().connectWallet(walletAddress, [
+          { token: "0x2::sui::SUI", symbol: "SUI", balance: formattedBalance, decimals: 9 },
+        ]);
+      } catch {
+        // Non-critical: balance will refresh on next page load
       }
     } catch (error) {
       // Clear timeout if still pending

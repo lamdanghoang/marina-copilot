@@ -46,7 +46,11 @@ export function useMemwalSetup(walletAddress: string | null) {
   const [credentials, setCredentials] = useState<MemwalCredentials | null>(() =>
     walletAddress ? loadCredentials(walletAddress) : null
   );
-  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [hasAccount, setHasAccount] = useState<boolean | null>(() => {
+    // Cache: if credentials exist, account exists
+    if (walletAddress && loadCredentials(walletAddress)) return true;
+    return null;
+  });
 
   const suiClient = useSuiClient();
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
