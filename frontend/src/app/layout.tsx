@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/Navbar";
+import { WalletSync } from "@/components/WalletSync";
 
 export const metadata: Metadata = {
   title: "Marina Copilot",
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
+          <WalletSync />
           <Navbar />
           {children}
         </Providers>

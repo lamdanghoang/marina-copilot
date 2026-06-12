@@ -1,7 +1,7 @@
 "use client";
 
 import { useConnectWallet, useWallets, useCurrentAccount, useDisconnectWallet, useSuiClientQuery } from "@mysten/dapp-kit";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useZkLoginSession } from "@/hooks/useZkLoginSession";
 import { truncateAddress, formatBalance } from "@/lib/formatting";
@@ -12,13 +12,10 @@ interface WalletButtonProps {
 }
 
 export function WalletButton({ className, variant = "navbar" }: WalletButtonProps) {
-  const [showWalletList, setShowWalletList] = useState(false);
   const account = useCurrentAccount();
   const wallets = useWallets();
   const { mutate: connect, isPending } = useConnectWallet();
   const { mutate: disconnect } = useDisconnectWallet();
-  const connectWallet = useCopilotStore((s) => s.connectWallet);
-  const disconnectWallet = useCopilotStore((s) => s.disconnectWallet);
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const { isZkLogin, logout: zkLogout } = useZkLoginSession();
 
@@ -28,18 +25,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
     { enabled: !!account?.address }
   );
 
-  // Sync dapp-kit wallet state with copilot store
-  useEffect(() => {
-    if (account?.address && balanceData) {
-      const rawBalance = BigInt(balanceData.totalBalance);
-      const formattedBalance = Number(formatBalance(rawBalance, 9, 2));
-      connectWallet(account.address, [
-        { token: "0x2::sui::SUI", symbol: "SUI", balance: formattedBalance, decimals: 9 },
-      ]);
-    } else if (!account && !isZkLogin) {
-      disconnectWallet();
-    }
-  }, [account, balanceData, connectWallet, disconnectWallet, isZkLogin]);
+  // Sync now handled by WalletSync component globally
 
   // Connected via zkLogin
   if (isZkLogin && walletAddress) {

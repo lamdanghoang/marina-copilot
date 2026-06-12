@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { WalletButton } from "@/components/WalletButton";
 import { useCopilotStore } from "@/store/copilot-store";
@@ -41,12 +42,12 @@ export function Navbar() {
 
       {mounted && (
         isAppRoute && isConnected ? <WalletButton /> : (
-          <a
+          <Link
             href="/app"
             className="flex items-center gap-2 rounded-xl bg-[#63f7ff] px-5 py-2.5 text-sm font-bold text-[#002021] hover:bg-cyan-100 transition-all shadow-[0_0_15px_rgba(99,247,255,0.2)]"
           >
             Launch App
-          </a>
+          </Link>
         )
       )}
     </nav>
@@ -55,13 +56,13 @@ export function Navbar() {
 
 function NavTab({ label, href, active }: { label: string; href: string; active?: boolean }) {
   return (
-    <a
+    <Link
       href={href}
       className={`text-sm font-medium transition-colors pb-1 border-b-2 hover:text-[#63f7ff] ${
         active ? "border-[#63f7ff] text-[#63f7ff]" : "border-transparent text-muted-foreground"
       }`}
     >
       {label}
-    </a>
+    </Link>
   );
 }
