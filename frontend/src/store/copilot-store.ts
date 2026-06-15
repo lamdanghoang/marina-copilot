@@ -5,7 +5,7 @@ import {
   ProcessIntentResponse,
   MemwalCredentials,
 } from "@/types";
-import { processIntent } from "@/lib/api-client";
+import { processIntent, remember } from "@/lib/api-client";
 
 interface CopilotStore {
   // Wallet
@@ -27,17 +27,67 @@ interface CopilotStore {
   sendMessage(message: string): Promise<void>;
   confirmTransaction(): Promise<void>;
   cancelPreview(): void;
+  clearHistory(): void;
   connectWallet(address: string, balances: TokenBalance[]): void;
   disconnectWallet(): void;
   setMemwalCredentials(creds: MemwalCredentials | null): void;
 }
 
-export const useCopilotStore = create<CopilotStore>((set, get) => ({
+// --- Chat persistence helpers ---
+const CHAT_STORAGE_KEY = "marina-copilot-chat";
+
+function loadMessages(): ChatMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveMessages(messages: ChatMessage[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-50)));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+/** Build a short summary of recent chat for MemWal storage */
+function buildChatSummary(messages: ChatMessage[]): string | null {
+  const recent = messages.slice(-20);
+  if (recent.length < 2) return null;
+
+  const lines = recent
+    .filter((m) => m.type !== "preview")
+    .map((m) => `${m.role === "user" ? "User" : "Marina"}: ${m.content.slice(0, 100)}`)
+    .slice(-10);
+
+  return `Chat session summary:\n${lines.join("\n")}`;
+}
+
+/** Save chat summary to MemWal (fire-and-forget) */
+function saveChatSummaryToMemwal(walletAddress: string | null, messages: ChatMessage[], creds: MemwalCredentials | null): void {
+  if (!walletAddress || messages.length < 2) return;
+  const summary = buildChatSummary(messages);
+  if (!summary) return;
+
+  remember(walletAddress, { type: "transaction", content: summary, metadata: { action: "chat_summary" } }, creds ?? undefined).catch(() => {});
+}
+
+export const useCopilotStore = create<CopilotStore>((set, get) => {
+  // Save chat summary on page unload
+  if (typeof window !== "undefined") {
+    window.addEventListener("beforeunload", () => {
+      const { walletAddress, messages, memwalCredentials } = get();
+      saveChatSummaryToMemwal(walletAddress, messages, memwalCredentials);
+    });
+  }
+
+  return {
   // Initial state
   walletAddress: null,
   balances: [],
   memwalCredentials: null,
-  messages: [],
+  messages: loadMessages(),
   isProcessing: false,
   statusText: "",
   currentPreview: null,
@@ -58,17 +108,21 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
     set({
       messages: [...messages, userMessage],
       isProcessing: true,
-      statusText: "Parsing intent...",
+      statusText: "Thinking...",
     });
+    saveMessages([...messages, userMessage]);
 
-    // Simulate progressive status updates during the single API call
+    // Only show transaction-related status for non-query messages
+    const isLikelyQuery = /balance|history|portfolio|how much/i.test(message);
     const statusTimers: ReturnType<typeof setTimeout>[] = [];
-    statusTimers.push(
-      setTimeout(() => set({ statusText: "Compiling transaction..." }), 1500)
-    );
-    statusTimers.push(
-      setTimeout(() => set({ statusText: "Checking risks..." }), 3000)
-    );
+    if (!isLikelyQuery) {
+      statusTimers.push(
+        setTimeout(() => set({ statusText: "Compiling transaction..." }), 4000)
+      );
+      statusTimers.push(
+        setTimeout(() => set({ statusText: "Checking risks..." }), 6000)
+      );
+    }
 
     try {
       const response = await processIntent({
@@ -84,12 +138,16 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
 
       const assistantMessage = buildAssistantMessage(response);
 
-      set((state) => ({
-        messages: [...state.messages, assistantMessage],
-        isProcessing: false,
-        statusText: "",
-        currentPreview: response.type === "preview" ? response.preview ?? null : null,
-      }));
+      set((state) => {
+        const newMessages = [...state.messages, assistantMessage];
+        saveMessages(newMessages);
+        return {
+          messages: newMessages,
+          isProcessing: false,
+          statusText: "",
+          currentPreview: response.type === "preview" ? response.preview ?? null : null,
+        };
+      });
     } catch (error: unknown) {
       // Clear status timers on error
       statusTimers.forEach(clearTimeout);
@@ -122,11 +180,15 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
         ...(suggestion ? { metadata: { memoryIndicator: suggestion } } : {}),
       };
 
-      set((state) => ({
-        messages: [...state.messages, errorMessage],
-        isProcessing: false,
-        statusText: "",
-      }));
+      set((state) => {
+        const newMessages = [...state.messages, errorMessage];
+        saveMessages(newMessages);
+        return {
+          messages: newMessages,
+          isProcessing: false,
+          statusText: "",
+        };
+      });
     }
   },
 
@@ -139,11 +201,16 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
   },
 
   cancelPreview: () => {
-    set({
-      currentPreview: null,
-      isProcessing: false,
-      statusText: "",
+    set((state) => {
+      const messages = state.messages.filter((m) => !(m.type === "preview" && m.role === "assistant"));
+      saveMessages(messages);
+      return { currentPreview: null, isProcessing: false, statusText: "", messages };
     });
+  },
+
+  clearHistory: () => {
+    saveMessages([]);
+    set({ messages: [], currentPreview: null });
   },
 
   connectWallet: (address: string, balances: TokenBalance[]) => {
@@ -154,11 +221,12 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
   },
 
   disconnectWallet: () => {
+    const { walletAddress, messages, memwalCredentials } = get();
+    saveChatSummaryToMemwal(walletAddress, messages, memwalCredentials);
     set({
       walletAddress: null,
       balances: [],
       memwalCredentials: null,
-      messages: [],
       currentPreview: null,
       isProcessing: false,
       statusText: "",
@@ -168,7 +236,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => ({
   setMemwalCredentials: (creds: MemwalCredentials | null) => {
     set({ memwalCredentials: creds });
   },
-}));
+}});
 
 function buildAssistantMessage(response: ProcessIntentResponse): ChatMessage {
   switch (response.type) {

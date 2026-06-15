@@ -10,6 +10,8 @@ import { parseIntent } from "../services/intent-parser";
 import { compileSwap, compileStake } from "../services/ptb-compiler";
 import { assessRisks } from "../services/guardian";
 import { recall } from "../services/memory-service";
+import { SuiClient } from "@mysten/sui/client";
+import { config } from "../lib/config";
 import {
   ProcessIntentRequest,
   ProcessIntentResponse,
@@ -24,23 +26,73 @@ import {
 /**
  * Handle read-only query intents (balance, history).
  */
-function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[]): string {
+async function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[], walletAddress: string): Promise<string> {
   if (intent.queryType === "balance") {
-    if (!balances || balances.length === 0) {
-      return "I couldn't fetch your balances. Please make sure your wallet is connected.";
+    try {
+      const client = new SuiClient({ url: config.sui.rpcUrl });
+      const allBalances = await client.getAllBalances({ owner: walletAddress });
+
+      if (!allBalances || allBalances.length === 0) {
+        return "Your wallet has no tokens yet.";
+      }
+
+      const lines = allBalances.map((b) => {
+        const raw = BigInt(b.totalBalance);
+        // Detect decimals from coin type
+        const isSui = b.coinType === "0x2::sui::SUI";
+        const decimals = isSui ? 9 : 6;
+        const amount = Number(raw) / 10 ** decimals;
+        const symbol = isSui ? "SUI" : b.coinType.split("::").pop() || "UNKNOWN";
+        return `• ${symbol}: ${amount.toFixed(isSui ? 4 : 2)}`;
+      });
+
+      return `Here's your wallet balance:\n${lines.join("\n")}`;
+    } catch (error) {
+      console.error("[Query] Balance fetch failed:", error);
+      // Fallback to frontend-provided balances
+      if (balances && balances.length > 0) {
+        const lines = balances.map((b) => `• ${b.symbol}: ${b.balance}`);
+        return `Here's your wallet balance:\n${lines.join("\n")}`;
+      }
+      return "Couldn't fetch balance. Please try again.";
     }
-    const lines = balances.map((b) => {
-      const usd = b.valueUsd ? ` (~$${b.valueUsd.toFixed(2)})` : "";
-      return `• ${b.symbol}: ${b.balance}${usd}`;
-    });
-    return `Here's your wallet balance:\n${lines.join("\n")}`;
   }
 
   if (intent.queryType === "history") {
-    return "Your recent transaction history is available on Sui Explorer. I can see from memory that you've been active with swaps and staking. Would you like me to help with a specific transaction?";
+    try {
+      const client = new SuiClient({ url: config.sui.rpcUrl });
+      const txs = await client.queryTransactionBlocks({
+        filter: { FromAddress: walletAddress },
+        options: { showEffects: true, showInput: true },
+        limit: 10,
+        order: "descending",
+      });
+
+      if (!txs.data || txs.data.length === 0) {
+        return "No transactions found for your wallet yet.";
+      }
+
+      const lines = txs.data.map((tx) => {
+        const status = tx.effects?.status?.status === "success" ? "✅" : "❌";
+        const gasUsed = tx.effects?.gasUsed;
+        const gas = gasUsed
+          ? (Number(BigInt(gasUsed.computationCost) + BigInt(gasUsed.storageCost) - BigInt(gasUsed.storageRebate)) / 1e9).toFixed(4)
+          : "?";
+        const digest = tx.digest.slice(0, 8) + "..." + tx.digest.slice(-4);
+        const time = tx.timestampMs
+          ? new Date(Number(tx.timestampMs)).toLocaleDateString()
+          : "";
+        return `${status} ${digest} | Gas: ${gas} SUI | ${time}`;
+      });
+
+      return `Your last ${txs.data.length} transactions:\n${lines.join("\n")}`;
+    } catch (error) {
+      console.error("[Query] History fetch failed:", error);
+      return "Couldn't fetch transaction history. Please try again.";
+    }
   }
 
-  return "I'm not sure what information you need. I can check your balance or transaction history.";
+  return "I can check your balance or transaction history. What would you like?";
 }
 
 const router = Router();
@@ -128,7 +180,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     if (intent.action === "query") {
       // Read-only action — respond directly, no PTB needed
-      const infoMessage = handleQueryIntent(intent, balances || []);
+      const infoMessage = await handleQueryIntent(intent, balances || [], walletAddress);
       const response: ProcessIntentResponse = {
         type: "info",
         memoryIndicator: parserOutput.memoryIndicator,
