@@ -279,7 +279,7 @@ async function findRouteWithTimeout(
       CETUS_AGGREGATOR_ENDPOINT,
       walletAddress,
       client,
-      Env.Mainnet
+      Env.Testnet
     );
 
     const params: FindRouterParams = {
@@ -325,7 +325,7 @@ async function buildSwapTransaction(
     CETUS_AGGREGATOR_ENDPOINT,
     walletAddress,
     client,
-    Env.Mainnet
+    Env.Testnet
   );
 
   const txb = new Transaction();

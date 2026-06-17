@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
+import { networkConfig } from "@/lib/config";
 import { Transaction } from "@mysten/sui/transactions";
 import { useCopilotStore, saveMessages } from "@/store/copilot-store";
 import { remember } from "@/lib/api-client";
@@ -23,7 +24,7 @@ export function truncateDigest(digest: string): string {
  * Builds a Sui Explorer URL for a transaction digest on testnet.
  */
 export function buildExplorerUrl(digest: string): string {
-  return `https://suiscan.xyz/mainnet/tx/${digest}`;
+  return `${networkConfig.explorerBase}${digest}`;
 }
 
 /**

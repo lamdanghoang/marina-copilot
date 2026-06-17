@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { networkConfig } from "@/lib/config";
 import { initZkLogin, getGoogleAuthUrl } from "@/lib/zklogin";
 
 export function ZkLoginButton() {
@@ -10,7 +11,7 @@ export function ZkLoginButton() {
     setLoading(true);
     try {
       // Fetch epoch via JSON-RPC (simpler than gRPC for this one call)
-      const res = await fetch("https://fullnode.mainnet.sui.io:443", {
+      const res = await fetch(networkConfig.rpcUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "suix_getLatestSuiSystemState", params: [] }),

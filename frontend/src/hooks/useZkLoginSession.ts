@@ -6,6 +6,7 @@ import { useCopilotStore } from "@/store/copilot-store";
 import { secureGet, secureClearAll } from "@/lib/secure-storage";
 import { formatBalance } from "@/lib/formatting";
 import { SuiGrpcClient } from "@mysten/sui/grpc";
+import { networkConfig } from "@/lib/config";
 
 /**
  * Hook that detects zkLogin session from localStorage and syncs wallet state.
@@ -13,7 +14,7 @@ import { SuiGrpcClient } from "@mysten/sui/grpc";
  */
 export function useZkLoginSession() {
   const [isZkLogin, setIsZkLogin] = useState(false);
-  const suiClient = new SuiGrpcClient({ network: "mainnet", baseUrl: "https://fullnode.mainnet.sui.io:443" } as any);
+  const suiClient = new SuiGrpcClient({ network: networkConfig.network, baseUrl: networkConfig.rpcUrl } as any);
   const connectWallet = useCopilotStore((s) => s.connectWallet);
   const disconnectWallet = useCopilotStore((s) => s.disconnectWallet);
   const walletAddress = useCopilotStore((s) => s.walletAddress);

@@ -9,10 +9,12 @@ import { bcs } from "@mysten/sui/bcs";
 import { toHex } from "@mysten/sui/utils";
 import { walrus } from "@mysten/walrus";
 
+import { networkConfig } from "@/lib/config";
+
 // === Config ===
 
-const NETWORK = "mainnet";
-const BASE_URL = "https://fullnode.mainnet.sui.io:443";
+const NETWORK = networkConfig.network;
+const BASE_URL = networkConfig.rpcUrl;
 
 // Seal timelock package — deploy your own or use existing
 // For hackathon demo, using testnet package (Seal key servers are testnet only currently)
