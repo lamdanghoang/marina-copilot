@@ -18,19 +18,26 @@ export function WalletSync() {
 
   // Sync wallet + balance
   useEffect(() => {
-    if (account?.address && client) {
-      (client as any).getBalance({ owner: account.address }).then((res: any) => {
-        const raw = BigInt(res?.balance?.balance ?? res?.totalBalance ?? "0");
-        const formattedBalance = Number(formatBalance(raw, 9, 2));
-        connectWallet(account.address, [
-          { token: "0x2::sui::SUI", symbol: "SUI", balance: formattedBalance, decimals: 9 },
-        ]);
-      }).catch(() => {
-        connectWallet(account.address, []);
-      });
-    } else if (!account && !isZkLogin) {
-      disconnectWallet();
+    if (!account?.address) {
+      if (!isZkLogin) disconnectWallet();
+      return;
     }
+
+    // Always set wallet address immediately (even before balance loads)
+    connectWallet(account.address, []);
+
+    if (!client) return;
+
+    (client as any).getBalance({ owner: account.address }).then((res: any) => {
+      const bal = res?.balance?.balance ?? res?.balance?.coinBalance ?? res?.totalBalance ?? "0";
+      const raw = BigInt(bal);
+      const formattedBalance = Number(formatBalance(raw, 9, 2));
+      connectWallet(account.address, [
+        { token: "0x2::sui::SUI", symbol: "SUI", balance: formattedBalance, decimals: 9 },
+      ]);
+    }).catch((e: any) => {
+      console.error("[WalletSync] getBalance error:", e);
+    });
   }, [account?.address, client, connectWallet, disconnectWallet, isZkLogin]);
 
   // Sync memwal credentials
