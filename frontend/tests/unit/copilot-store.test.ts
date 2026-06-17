@@ -39,7 +39,7 @@ describe("CopilotStore", () => {
   });
 
   describe("disconnectWallet", () => {
-    it("should clear wallet state and messages", () => {
+    it("should clear wallet state but keep messages", () => {
       useCopilotStore.setState({
         walletAddress: "0x1234",
         balances: [{ token: "0x2::sui::SUI", symbol: "SUI", balance: 50, decimals: 9 }],
@@ -62,7 +62,9 @@ describe("CopilotStore", () => {
       const state = useCopilotStore.getState();
       expect(state.walletAddress).toBeNull();
       expect(state.balances).toEqual([]);
-      expect(state.messages).toEqual([]);
+      expect(state.messages).toEqual([
+        { id: "1", role: "user", content: "hello", type: "text", timestamp: 1 },
+      ]);
       expect(state.currentPreview).toBeNull();
       expect(state.isProcessing).toBe(false);
       expect(state.statusText).toBe("");

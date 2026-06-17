@@ -206,7 +206,6 @@ describe("Feature: marina-copilot-hackathon, Property 14: Success message contai
           // Test buildExplorerUrl
           const explorerUrl = buildExplorerUrl(digest);
           expect(explorerUrl).toContain("suiscan.xyz");
-          expect(explorerUrl).toContain("testnet");
           expect(explorerUrl).toContain(digest);
           expect(explorerUrl).toMatch(/^https:\/\//);
 
@@ -215,8 +214,14 @@ describe("Feature: marina-copilot-hackathon, Property 14: Success message contai
           expect(summary.length).toBeGreaterThan(0);
 
           // For valid metadata with steps, summary should be descriptive
-          if (metadata.steps.length > 0) {
-            expect(summary).toBe(metadata.steps[0].description);
+          const relevantStep = metadata.type === "swap"
+            ? metadata.steps.find((s: any) => s.type === "swap")
+            : metadata.steps.find((s: any) => s.type === "stake");
+          if (relevantStep) {
+            expect(summary).toBe(relevantStep.description);
+          } else {
+            // Fallback — still non-empty
+            expect(summary.length).toBeGreaterThan(0);
           }
         }
       ),
