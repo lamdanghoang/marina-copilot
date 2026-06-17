@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { initZkLogin, getGoogleAuthUrl } from "@/lib/zklogin";
 
 export function ZkLoginButton() {
@@ -10,9 +9,15 @@ export function ZkLoginButton() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const suiClient = new SuiGrpcClient({ network: "testnet" } as any);
-      const { epoch } = await (suiClient as any).getLatestSuiSystemState();
-      const { nonce } = await initZkLogin(Number(epoch));
+      // Fetch epoch via JSON-RPC (simpler than gRPC for this one call)
+      const res = await fetch("https://fullnode.mainnet.sui.io:443", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "suix_getLatestSuiSystemState", params: [] }),
+      });
+      const data = await res.json();
+      const epoch = Number(data.result?.epoch ?? 0);
+      const { nonce } = await initZkLogin(epoch);
       window.location.href = getGoogleAuthUrl(nonce);
     } catch (error) {
       console.error("zkLogin init failed:", error);

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useCurrentClient } from "@mysten/dapp-kit-react";
+
 import { useCopilotStore } from "@/store/copilot-store";
 import { secureGet, secureClearAll } from "@/lib/secure-storage";
-import { getStoredZkLoginState } from "@/lib/zklogin";
-import { getZkProofFromEnoki, isEnokiConfigured } from "@/lib/enoki";
 import { formatBalance } from "@/lib/formatting";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 
 /**
  * Hook that detects zkLogin session from localStorage and syncs wallet state.
@@ -14,7 +13,7 @@ import { formatBalance } from "@/lib/formatting";
  */
 export function useZkLoginSession() {
   const [isZkLogin, setIsZkLogin] = useState(false);
-  const suiClient = useCurrentClient();
+  const suiClient = new SuiGrpcClient({ network: "mainnet", baseUrl: "https://fullnode.mainnet.sui.io:443" } as any);
   const connectWallet = useCopilotStore((s) => s.connectWallet);
   const disconnectWallet = useCopilotStore((s) => s.disconnectWallet);
   const walletAddress = useCopilotStore((s) => s.walletAddress);
@@ -51,7 +50,8 @@ export function useZkLoginSession() {
     setIsZkLogin(true);
     try {
       const balanceData = await (suiClient as any).getBalance({ owner: address });
-      const rawBalance = BigInt(balanceData.totalBalance);
+      const bal = balanceData?.balance?.balance ?? balanceData?.balance?.coinBalance ?? balanceData?.totalBalance ?? "0";
+      const rawBalance = BigInt(bal);
       const formattedBalance = Number(formatBalance(rawBalance, 9, 2));
 
       connectWallet(address, [
