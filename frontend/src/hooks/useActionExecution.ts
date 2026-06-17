@@ -3,7 +3,7 @@
 import { useCallback, useRef } from "react";
 import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore, saveMessages } from "@/store/copilot-store";
-import { createCapsule, uploadFileToWalrus, CapsuleData, UploadedFile } from "@/lib/walrus-seal";
+import type { CapsuleData, UploadedFile } from "@/lib/walrus-seal";
 import type { ChatMessage } from "@/types";
 
 const CAPSULES_KEY = "marina-copilot-capsules";
@@ -68,6 +68,7 @@ async function executeCapsuleAction(
   useCopilotStore.setState({ isProcessing: true, statusText: "Encrypting..." });
 
   try {
+    const { createCapsule } = await import("@/lib/walrus-seal");
     const capsule = await createCapsule({
       content: params.content as string,
       unlockAfterMinutes: params.unlockAfterMinutes as number,
@@ -114,6 +115,7 @@ function triggerFileUpload(
     useCopilotStore.setState({ isProcessing: true, statusText: "Uploading..." });
 
     try {
+      const { uploadFileToWalrus } = await import("@/lib/walrus-seal");
       const result = await uploadFileToWalrus({
         file,
         sender,
