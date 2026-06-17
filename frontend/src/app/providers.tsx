@@ -11,6 +11,7 @@ const dAppKit = createDAppKit({
   createClient: (network) => new SuiGrpcClient({ network, baseUrl: networkConfig.rpcUrl } as any),
   defaultNetwork: networkConfig.network,
   autoConnect: true,
+  slushWalletConfig: null,
 });
 
 const queryClient = new QueryClient();

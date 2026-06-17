@@ -16,9 +16,8 @@ import { networkConfig } from "@/lib/config";
 const NETWORK = networkConfig.network;
 const BASE_URL = networkConfig.rpcUrl;
 
-// Seal timelock package — deploy your own or use existing
-// For hackathon demo, using testnet package (Seal key servers are testnet only currently)
-const SEAL_PACKAGE_ID = "0x23e7b5e2e47e3e5940ca2cba14a9a30dc9f7b6d1f5b18ed41be1e9059ece3b4e";
+// Seal timelock package
+const SEAL_PACKAGE_ID = networkConfig.sealPackageId;
 
 const SEAL_KEY_SERVERS = [
   { objectId: "0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", weight: 1 },
@@ -69,6 +68,31 @@ function createWalrusClient() {
 
 // === #1: Walrus Upload via writeBlobFlow (user signs) ===
 
+// WAL token for storage payment
+const WAL_COIN_TYPE = networkConfig.walCoinType;
+const WAL_EXCHANGE_PACKAGE = networkConfig.walExchangePackage;
+const EXCHANGE_ID = networkConfig.walExchangeId;
+
+async function getWalBalance(sender: string): Promise<bigint> {
+  const client = createSuiClient();
+  const resp = await (client as any).getBalance({ owner: sender, coinType: WAL_COIN_TYPE });
+  const b = resp?.balance;
+  const val = typeof b === "object" ? (b.coinBalance ?? b.balance ?? "0") : (b ?? "0");
+  return BigInt(val);
+}
+
+function buildSwapTx(sender: string, amount: bigint): Transaction {
+  const tx = new Transaction();
+  tx.setSender(sender);
+  const [suiCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
+  const walCoin = tx.moveCall({
+    target: `${WAL_EXCHANGE_PACKAGE}::wal_exchange::exchange_all_for_wal`,
+    arguments: [tx.object(EXCHANGE_ID), suiCoin],
+  });
+  tx.transferObjects([walCoin], sender);
+  return tx;
+}
+
 export async function walrusUpload(
   data: Uint8Array,
   sender: string,
@@ -80,6 +104,21 @@ export async function walrusUpload(
   onProgress?.("Encoding blob...");
   const flow = client.walrus.writeBlobFlow({ blob: data });
   const encoded = await flow.encode();
+
+  // Check WAL balance vs storage cost
+  onProgress?.("Checking WAL balance...");
+  const cost = await client.walrus.storageCost(data.length, 5);
+  const walBalance = await getWalBalance(sender);
+
+  // Auto-swap SUI→WAL if insufficient
+  if (walBalance < cost.totalCost) {
+    const shortage = cost.totalCost - walBalance;
+    onProgress?.(`Swapping ${(Number(shortage) / 1e9).toFixed(4)} SUI → WAL...`);
+    const swapTx = buildSwapTx(sender, shortage);
+    await signAndExecute({ transaction: swapTx });
+    // Wait for swap to finalize
+    await new Promise((r) => setTimeout(r, 2000));
+  }
 
   // Register blob (user signs)
   onProgress?.("Registering on Walrus (sign tx)...");
