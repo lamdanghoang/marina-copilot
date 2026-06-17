@@ -202,25 +202,17 @@ graph TB
 
 ## Track Requirements
 
-### ✅ Agentic Web — Intent Engine (Sub-track 3)
-
-| Requirement | Status |
-|-------------|--------|
-| Text → PTB → execution flow | ✅ Full e2e on Sui Testnet |
-| Human-readable PTB preview | ✅ Numbered steps with amounts, rates, gas |
-| Guardian catches ≥2 risk classes | ✅ Slippage + Concentration (with cumulative history) |
-| Explicit confirmation step | ✅ Nothing executes without user click |
-| Read-only queries without confirm | ✅ Balance, history — instant response |
-
 ### ✅ Walrus Track
 
 | Requirement | Status |
 |-------------|--------|
-| Long-term memory persists across sessions | ✅ Close browser → reopen → recalls preferences |
-| Agent becomes more useful with memory | ✅ Session 2 skips clarification questions |
-| Memory is portable and verifiable | ✅ Per-user MemWal accounts on-chain, user owns data |
+| Long-term memory persists across sessions | ✅ MemWal SDK, cross-session recall |
+| Agent becomes more useful with memory | ✅ Session 2 skips clarification, auto-fills preferences |
+| Memory is portable and verifiable | ✅ Per-user MemWal accounts on-chain, encrypted on Walrus |
 | User can revoke access | ✅ Remove delegate key on-chain |
-| Working system, not just a demo | ✅ Full integration with real MemWal SDK |
+| Time Capsules (Seal + Walrus) | ✅ Encrypt → upload → time-lock decrypt |
+| File Storage (Walrus) | ✅ writeBlobFlow, user signs register + certify |
+| Working system, not just a demo | ✅ Full integration with real SDKs |
 
 ---
 

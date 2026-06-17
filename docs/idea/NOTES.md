@@ -55,12 +55,17 @@ Ported from marina-assistant mobile app:
 - Dark theme: Marina color palette (cyan/teal), glassmorphism, Space Grotesk + Manrope fonts
 - Glass panels, glow effects, uppercase tracking labels
 
-## 2026-06-10: Rename → Marina Copilot
+## 2026-06-17: Focus Single Track — Walrus
 
-Renamed from "DeFi Copilot" to "Marina Copilot":
-- Associates with Marina character brand
-- Distinct from existing "Marina Assistant" (mobile app, different platform)
-- "Copilot" signals AI assistant + DeFi focus
+**Decision**: Submit only to Walrus track (not Agentic Web).
+
+**Walrus features in app:**
+1. **MemWal** (AI memory) — per-user on-chain accounts, preferences persist cross-session
+2. **Time Capsules** — Seal threshold encryption + Walrus blob storage + time-lock
+3. **File Storage** — Walrus SDK writeBlobFlow (user signs register + certify)
+4. **Chat Summary** — auto-save session summary to MemWal on disconnect
+
+**DeFi features (swap/stake) kept** as supporting functionality — shows AI agent using memory in real workflows. Not the submission focus.
 
 ---
 

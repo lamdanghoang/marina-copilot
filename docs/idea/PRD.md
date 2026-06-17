@@ -6,9 +6,9 @@
 |-------|--------|
 | Product Name | Marina Copilot |
 | Hackathon | Sui Overflow 2026 |
-| Tracks | Agentic Web (Sub-track 3: Intent Engine) + Walrus |
-| Target Users | Non-technical crypto holders who want DeFi access without complexity |
-| One-liner | A conversational AI that turns plain-language financial goals into safe, one-click Sui transactions — with persistent memory the user owns. |
+| Track | **Walrus** |
+| Target Users | Users who want AI assistants with persistent, user-owned memory + secure storage |
+| One-liner | A conversational AI with persistent memory, encrypted time capsules, and decentralized file storage — all powered by Walrus and owned by the user. |
 
 ## 2. Problem
 
@@ -25,13 +25,13 @@ DeFi on Sui is powerful but requires users to:
 
 | # | Goal |
 |---|------|
-| G1 | Make DeFi accessible via natural language |
-| G2 | AI reasons about financial goals, not just parses commands |
-| G3 | Guardian risk assessment protects users before every transaction |
-| G4 | Get smarter over time via persistent Walrus memory |
-| G5 | User owns their memory data (per-user MemWal accounts on-chain) |
-| G6 | Dual auth: wallet extension + zkLogin (Google, no seed phrase) |
-| G7 | Prove Sui's unique value (PTBs, Walrus, Seal, zkLogin) |
+| G1 | AI memory persists across sessions via Walrus (MemWal) |
+| G2 | User owns their memory data (per-user on-chain accounts, revocable) |
+| G3 | Time Capsules: encrypted messages stored on Walrus, unlock by time |
+| G4 | File Storage: decentralized file upload/download via Walrus |
+| G5 | Agent becomes smarter over time (memory-driven personalization) |
+| G6 | Prove Walrus value: memory + storage + encryption in one app |
+| G7 | Dual auth: wallet extension + zkLogin (Google) |
 
 ## 4. Non-Goals (Out of Scope)
 
