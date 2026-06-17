@@ -50,7 +50,7 @@ function ConnectOverlay() {
           {wallets.map((wallet) => (
             <button
               key={wallet.name}
-              onClick={() => (dAppKit as any).connect(wallet)}
+              onClick={() => (dAppKit as any).connectWallet({ wallet })}
               className="flex w-full items-center gap-3 rounded-xl border border-[rgba(0,245,255,0.15)] p-4 hover:bg-muted/30 transition-colors"
             >
               {wallet.icon && <img src={wallet.icon} alt={wallet.name} className="w-8 h-8 rounded-lg" />}
