@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SuiClient } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { initZkLogin, getGoogleAuthUrl } from "@/lib/zklogin";
 
 export function ZkLoginButton() {
@@ -10,8 +10,8 @@ export function ZkLoginButton() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const suiClient = new SuiClient({ url: "https://fullnode.testnet.sui.io:443" });
-      const { epoch } = await suiClient.getLatestSuiSystemState();
+      const suiClient = new SuiGrpcClient({ network: "testnet" } as any);
+      const { epoch } = await (suiClient as any).getLatestSuiSystemState();
       const { nonce } = await initZkLogin(Number(epoch));
       window.location.href = getGoogleAuthUrl(nonce);
     } catch (error) {

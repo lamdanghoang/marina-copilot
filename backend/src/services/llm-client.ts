@@ -64,6 +64,8 @@ export function buildSystemPrompt(): string {
 - **swap**: Exchange tokens via Cetus DEX aggregator. Required fields: fromToken, toToken, amount. Optional: dex, slippageTolerance.
 - **stake**: Stake SUI with a validator. Required fields: token (always "SUI"), amount. Optional: validator.
 - **query**: Read-only information request. Required fields: queryType ("balance" or "history"). No transaction needed.
+- **create_capsule**: Create a time-locked encrypted message stored on Walrus. Required fields: content (the secret message), unlockAfterMinutes (how long until decryptable). Optional: recipient.
+- **upload_file**: Upload a file to Walrus decentralized storage. No fields needed (triggers file picker on frontend).
 
 ## Supported Tokens
 ${tokenList}
@@ -81,13 +83,16 @@ You MUST return valid JSON matching this exact schema:
 {
   "reasoning": "Brief analysis of the user's request",
   "intent": {
-    "action": "swap" | "stake" | "query",
+    "action": "swap" | "stake" | "query" | "create_capsule" | "upload_file",
     "fromToken": "TOKEN_SYMBOL",
     "toToken": "TOKEN_SYMBOL",
     "amount": <number>,
     "dex": "optional_dex_name",
     "slippageTolerance": <optional_number>,
-    "queryType": "balance" | "history"
+    "queryType": "balance" | "history",
+    "content": "capsule secret message",
+    "unlockAfterMinutes": <number>,
+    "recipient": "optional"
   } | null,
   "clarification": "Question to ask user" | null,
   "riskFlags": {
@@ -106,6 +111,8 @@ You MUST return valid JSON matching this exact schema:
 - If a token symbol is not in the supported list, set intent=null and indicate the unrecognized token
 - For "check balance", "how much do I have", "what's my balance" → use action "query" with queryType "balance"
 - For "transaction history", "recent transactions", "what did I do" → use action "query" with queryType "history"
+- For "create capsule", "time capsule", "encrypt a message", "lock this message" → use action "create_capsule" with content and unlockAfterMinutes
+- For "upload file", "store file", "save to walrus" → use action "upload_file"
 - For swap intents: set slippageConcern=true if the amount is very large relative to balances
 - For any intent: set concentrationConcern=true if it would make one token >70% of portfolio
 - Use memory context to fill in defaults (e.g. preferred DEX) without asking again

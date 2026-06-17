@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useConnectWallet, useWallets, useCurrentAccount } from "@mysten/dapp-kit";
+import { useWallets, useCurrentAccount, useDAppKit } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useZkLoginSession } from "@/hooks/useZkLoginSession";
 import { AppLayout } from "@/components/AppLayout";
@@ -34,7 +34,7 @@ export default function AppPage() {
 
 function ConnectOverlay() {
   const wallets = useWallets();
-  const { mutate: connect } = useConnectWallet();
+  const dAppKit = useDAppKit();
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -50,7 +50,7 @@ function ConnectOverlay() {
           {wallets.map((wallet) => (
             <button
               key={wallet.name}
-              onClick={() => connect({ wallet })}
+              onClick={() => (dAppKit as any).connect(wallet)}
               className="flex w-full items-center gap-3 rounded-xl border border-[rgba(0,245,255,0.15)] p-4 hover:bg-muted/30 transition-colors"
             >
               {wallet.icon && <img src={wallet.icon} alt={wallet.name} className="w-8 h-8 rounded-lg" />}

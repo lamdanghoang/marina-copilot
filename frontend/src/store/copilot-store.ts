@@ -23,6 +23,9 @@ interface CopilotStore {
   // Preview
   currentPreview: ProcessIntentResponse["preview"] | null;
 
+  // Pending action (capsule/file) for frontend execution
+  pendingAction: ProcessIntentResponse["actionRequest"] | null;
+
   // Actions
   sendMessage(message: string): Promise<void>;
   confirmTransaction(): Promise<void>;
@@ -34,21 +37,25 @@ interface CopilotStore {
 }
 
 // --- Chat persistence helpers ---
-const CHAT_STORAGE_KEY = "marina-copilot-chat";
+const CHAT_STORAGE_PREFIX = "marina-copilot-chat-";
 
-function loadMessages(): ChatMessage[] {
+function getChatKey(walletAddress: string | null): string {
+  return walletAddress ? `${CHAT_STORAGE_PREFIX}${walletAddress}` : `${CHAT_STORAGE_PREFIX}default`;
+}
+
+function loadMessages(walletAddress?: string | null): ChatMessage[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    const raw = localStorage.getItem(getChatKey(walletAddress ?? null));
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 
-function saveMessages(messages: ChatMessage[]): void {
+export function saveMessages(messages: ChatMessage[], walletAddress?: string | null): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-50)));
-  } catch { /* quota exceeded — ignore */ }
+    localStorage.setItem(getChatKey(walletAddress ?? null), JSON.stringify(messages.slice(-50)));
+  } catch { /* quota exceeded */ }
 }
 
 /** Build a short summary of recent chat for MemWal storage */
@@ -87,10 +94,11 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
   walletAddress: null,
   balances: [],
   memwalCredentials: null,
-  messages: loadMessages(),
+  messages: [],
   isProcessing: false,
   statusText: "",
   currentPreview: null,
+  pendingAction: null,
 
   sendMessage: async (message: string) => {
     const { walletAddress, balances, messages, memwalCredentials } = get();
@@ -110,7 +118,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
       isProcessing: true,
       statusText: "Thinking...",
     });
-    saveMessages([...messages, userMessage]);
+    saveMessages([...messages, userMessage], get().walletAddress);
 
     // Only show transaction-related status for non-query messages
     const isLikelyQuery = /balance|history|portfolio|how much/i.test(message);
@@ -140,12 +148,13 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
 
       set((state) => {
         const newMessages = [...state.messages, assistantMessage];
-        saveMessages(newMessages);
+        saveMessages(newMessages, get().walletAddress);
         return {
           messages: newMessages,
           isProcessing: false,
           statusText: "",
           currentPreview: response.type === "preview" ? response.preview ?? null : null,
+          pendingAction: response.type === "action_request" ? response.actionRequest ?? null : null,
         };
       });
     } catch (error: unknown) {
@@ -182,7 +191,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
 
       set((state) => {
         const newMessages = [...state.messages, errorMessage];
-        saveMessages(newMessages);
+        saveMessages(newMessages, get().walletAddress);
         return {
           messages: newMessages,
           isProcessing: false,
@@ -203,20 +212,24 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
   cancelPreview: () => {
     set((state) => {
       const messages = state.messages.filter((m) => !(m.type === "preview" && m.role === "assistant"));
-      saveMessages(messages);
+      saveMessages(messages, get().walletAddress);
       return { currentPreview: null, isProcessing: false, statusText: "", messages };
     });
   },
 
   clearHistory: () => {
-    saveMessages([]);
+    saveMessages([], get().walletAddress);
     set({ messages: [], currentPreview: null });
   },
 
   connectWallet: (address: string, balances: TokenBalance[]) => {
+    const currentAddress = get().walletAddress;
+    // Load chat for this wallet if switching
+    const messages = currentAddress !== address ? loadMessages(address) : get().messages;
     set({
       walletAddress: address,
       balances,
+      messages,
     });
   },
 
@@ -265,6 +278,18 @@ function buildAssistantMessage(response: ProcessIntentResponse): ChatMessage {
         content: response.info?.message ?? "Here's what I found.",
         type: "text",
         timestamp: Date.now(),
+      };
+
+    case "action_request":
+      return {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: response.actionRequest?.message ?? "I'll help you with that.",
+        type: "text",
+        timestamp: Date.now(),
+        metadata: {
+          memoryIndicator: `Action: ${response.actionRequest?.action}`,
+        },
       };
 
     case "error":

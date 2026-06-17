@@ -39,7 +39,7 @@ export function getGoogleAuthUrl(nonce: string): string {
 }
 
 export async function getZkLoginAddress(jwt: string, userSalt: string): Promise<string> {
-  return jwtToAddress(jwt, userSalt);
+  return (jwtToAddress as any)(jwt, userSalt);
 }
 
 export async function getStoredZkLoginState(): Promise<ZkLoginState | null> {

@@ -16,8 +16,10 @@
     "package": "npm run build && npx serverless package"
   },
   "dependencies": {
+    "@7kprotocol/sdk-ts": "^4.0.0",
     "@aws-sdk/client-bedrock-runtime": "^3.600.0",
     "@cetusprotocol/aggregator-sdk": "^0.1.0",
+    "@flowx-finance/sdk": "^2.1.0",
     "@mysten-incubation/memwal": "^0.0.7",
     "@mysten/sui": "^1.0.0",
     "bn.js": "^5.2.3",

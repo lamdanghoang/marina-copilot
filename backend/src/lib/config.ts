@@ -46,7 +46,7 @@ export function loadConfig(): AppConfig {
     },
     sui: {
       rpcUrl:
-        process.env.SUI_RPC_URL || "https://fullnode.testnet.sui.io:443",
+        process.env.SUI_RPC_URL || "https://fullnode.mainnet.sui.io:443",
     },
     memwal: {
       delegateKey: process.env.MEMWAL_DELEGATE_KEY || "",

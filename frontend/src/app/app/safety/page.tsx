@@ -4,7 +4,7 @@ export default function SafetyPage() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h3 className="font-headline text-xl font-bold flex items-center gap-2">
-        <span className="text-[#63f7ff]">🛡️</span>
+        
         Safety Audit
       </h3>
 

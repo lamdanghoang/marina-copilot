@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit-react";
 import { WalletButton } from "@/components/WalletButton";
 import { useCopilotStore } from "@/store/copilot-store";
 
@@ -33,9 +33,10 @@ export function Navbar() {
         {showTabs && (
           <div className="hidden md:flex gap-6 ml-8">
             <NavTab label="Chat" href="/app" active={path === "/app"} />
-            <NavTab label="Portfolio" href="/app/portfolio" active={path === "/app/portfolio"} />
+            <NavTab label="Capsules" href="/app/capsules" active={path === "/app/capsules"} />
+            <NavTab label="Files" href="/app/files" active={path === "/app/files"} />
             <NavTab label="Swap" href="/app/swap" active={path === "/app/swap"} />
-            <NavTab label="Safety" href="/app/safety" active={path === "/app/safety"} />
+            <NavTab label="Portfolio" href="/app/portfolio" active={path === "/app/portfolio"} />
           </div>
         )}
       </div>

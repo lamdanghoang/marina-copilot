@@ -1,7 +1,7 @@
 "use client";
 
-import { useConnectWallet, useWallets, useCurrentAccount, useDisconnectWallet, useSuiClientQuery } from "@mysten/dapp-kit";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCurrentAccount, useWallets, useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useZkLoginSession } from "@/hooks/useZkLoginSession";
 import { truncateAddress, formatBalance } from "@/lib/formatting";
@@ -14,18 +14,20 @@ interface WalletButtonProps {
 export function WalletButton({ className, variant = "navbar" }: WalletButtonProps) {
   const account = useCurrentAccount();
   const wallets = useWallets();
-  const { mutate: connect, isPending } = useConnectWallet();
-  const { mutate: disconnect } = useDisconnectWallet();
+  const dAppKit = useDAppKit();
+  const client = useCurrentClient();
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const { isZkLogin, logout: zkLogout } = useZkLoginSession();
+  const [balance, setBalance] = useState<string | null>(null);
 
-  const { data: balanceData } = useSuiClientQuery(
-    "getBalance",
-    { owner: account?.address ?? "" },
-    { enabled: !!account?.address }
-  );
-
-  // Sync now handled by WalletSync component globally
+  // Fetch balance
+  useEffect(() => {
+    if (!account?.address || !client) return;
+    (client as any).getBalance({ owner: account.address }).then((res: any) => {
+      const raw = BigInt(res?.balance?.balance ?? res?.totalBalance ?? "0");
+      setBalance(formatBalance(raw, 9, 2));
+    }).catch(() => {});
+  }, [account?.address, client]);
 
   // Connected via zkLogin
   if (isZkLogin && walletAddress) {
@@ -44,17 +46,17 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
   }
 
   // Connected via wallet extension
-  if (account?.address && balanceData) {
+  if (account?.address) {
     return (
       <div className={`flex items-center gap-3 ${className ?? ""}`}>
         <span className="font-mono text-xs text-[#63f7ff]">{truncateAddress(account.address)}</span>
-        <div className="flex items-center gap-1.5 rounded-full border border-[rgba(0,245,255,0.2)] bg-[#232b2c] px-3 py-1.5">
-          <span className="text-xs font-bold text-[#63f7ff]">
-            {formatBalance(BigInt(balanceData.totalBalance), 9, 2)} SUI
-          </span>
-        </div>
+        {balance && (
+          <div className="flex items-center gap-1.5 rounded-full border border-[rgba(0,245,255,0.2)] bg-[#232b2c] px-3 py-1.5">
+            <span className="text-xs font-bold text-[#63f7ff]">{balance} SUI</span>
+          </div>
+        )}
         <button
-          onClick={() => disconnect()}
+          onClick={() => (dAppKit as any).disconnect()}
           className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
         >
           Disconnect
@@ -63,7 +65,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
     );
   }
 
-  // Not connected — Launch App button that opens modal
+  // Not connected
   if (variant === "hero") return null;
 
   return (

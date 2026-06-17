@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
 import { Transaction } from "@mysten/sui/transactions";
-import { useCopilotStore } from "@/store/copilot-store";
+import { useCopilotStore, saveMessages } from "@/store/copilot-store";
 import { remember } from "@/lib/api-client";
 import { formatBalance } from "@/lib/formatting";
 import type { ChatMessage, TransactionMetadata } from "@/types";
@@ -23,7 +23,7 @@ export function truncateDigest(digest: string): string {
  * Builds a Sui Explorer URL for a transaction digest on testnet.
  */
 export function buildExplorerUrl(digest: string): string {
-  return `https://suiscan.xyz/testnet/tx/${digest}`;
+  return `https://suiscan.xyz/mainnet/tx/${digest}`;
 }
 
 /**
@@ -31,18 +31,12 @@ export function buildExplorerUrl(digest: string): string {
  */
 export function buildActionSummary(metadata: TransactionMetadata): string {
   if (metadata.type === "swap") {
-    const steps = metadata.steps;
-    if (steps.length > 0) {
-      return steps[0].description;
-    }
-    return "Swap completed";
+    const swapStep = metadata.steps.find((s) => s.type === "swap");
+    return swapStep?.description ?? "Swap completed";
   }
   if (metadata.type === "stake") {
-    const steps = metadata.steps;
-    if (steps.length > 0) {
-      return steps[0].description;
-    }
-    return `Staked SUI with ${metadata.validatorName ?? "validator"}`;
+    const stakeStep = metadata.steps.find((s) => s.type === "stake");
+    return stakeStep?.description ?? `Staked SUI with ${metadata.validatorName ?? "validator"}`;
   }
   return "Transaction completed";
 }
@@ -103,9 +97,9 @@ function isWalletRejection(error: unknown): boolean {
  * deserialize → sign → execute → handle result → remember
  */
 export function useTransactionExecution() {
-  const { mutateAsync: signAndExecuteTransaction } =
-    useSignAndExecuteTransaction();
-  const suiClient = useSuiClient();
+  const { signAndExecuteTransaction } =
+    useDAppKit();
+  const suiClient = useCurrentClient();
 
   const executeTransaction = useCallback(async () => {
     const store = useCopilotStore.getState();
@@ -157,7 +151,7 @@ export function useTransactionExecution() {
       // Phase 3: Confirmed
       useCopilotStore.setState({ statusText: "Confirming..." });
 
-      const digest = result.digest;
+      const digest = (result as any)?.Transaction?.digest ?? (result as any)?.digest ?? "";
       const truncated = truncateDigest(digest);
       const explorerUrl = buildExplorerUrl(digest);
       const actionSummary = buildActionSummary(metadata);
@@ -165,7 +159,7 @@ export function useTransactionExecution() {
       const successMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: `✅ ${actionSummary}\n\nTransaction: ${truncated}\nView on Explorer: ${explorerUrl}`,
+        content: `✅ ${actionSummary}`,
         type: "success",
         timestamp: Date.now(),
         metadata: {
@@ -174,12 +168,18 @@ export function useTransactionExecution() {
         },
       };
 
-      useCopilotStore.setState((state) => ({
-        messages: [...state.messages, successMessage],
-        isProcessing: false,
-        statusText: "",
-        currentPreview: null,
-      }));
+      useCopilotStore.setState((state) => {
+        // Remove "Here's what I'll do:" preview message + add success
+        const filtered = state.messages.filter((m) => !(m.type === "preview" && m.role === "assistant"));
+        const newMessages = [...filtered, successMessage];
+        saveMessages(newMessages, state.walletAddress);
+        return {
+          messages: newMessages,
+          isProcessing: false,
+          statusText: "",
+          currentPreview: null,
+        };
+      });
 
       // Trigger memory store (fire and forget — silent on failure per req 8.6)
       try {
@@ -193,7 +193,7 @@ export function useTransactionExecution() {
 
       // Refetch balance after successful tx
       try {
-        const balanceResult = await suiClient.getBalance({ owner: walletAddress });
+        const balanceResult = await (suiClient as any).getBalance({ owner: walletAddress });
         const rawBalance = BigInt(balanceResult.totalBalance);
         const formattedBalance = Number(formatBalance(rawBalance, 9, 2));
         useCopilotStore.getState().connectWallet(walletAddress, [

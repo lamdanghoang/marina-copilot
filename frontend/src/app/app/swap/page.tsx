@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCopilotStore } from "@/store/copilot-store";
 
+const TOKENS = ["SUI", "USDC", "USDT", "WETH", "CETUS"];
+
 export default function SwapPage() {
-  const [amount, setAmount] = useState("100");
-  const [fromToken, setFromToken] = useState("USDC");
-  const [toToken, setToToken] = useState("SUI");
+  const [amount, setAmount] = useState("1");
+  const [fromToken, setFromToken] = useState("SUI");
+  const [toToken, setToToken] = useState("USDC");
   const router = useRouter();
   const sendMessage = useCopilotStore((s) => s.sendMessage);
 
@@ -17,62 +19,100 @@ export default function SwapPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h3 className="font-headline text-xl font-bold flex items-center gap-2">
-        <span className="text-[#63f7ff]">🔄</span>
-        Swap
-      </h3>
+    <div className="flex flex-1 items-start justify-center p-8">
+      <div className="w-full max-w-md space-y-6">
+        <h3 className="font-headline text-xl font-bold flex items-center gap-2">
+          Swap
+        </h3>
 
-      <div className="glass-panel p-6 rounded-2xl max-w-lg space-y-4">
-        <div>
-          <label className="block text-[10px] uppercase font-headline font-medium text-muted-foreground mb-1">From</label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 bg-[#0d1515] border border-[rgba(0,245,255,0.15)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#63f7ff]"
-            />
-            <select
-              value={fromToken}
-              onChange={(e) => setFromToken(e.target.value)}
-              className="bg-[#0d1515] border border-[rgba(0,245,255,0.15)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#63f7ff]"
-            >
-              <option value="SUI">SUI</option>
-              <option value="USDC">USDC</option>
-              <option value="USDT">USDT</option>
-              <option value="WETH">WETH</option>
-              <option value="CETUS">CETUS</option>
-            </select>
+        <div className="glass-panel rounded-2xl p-6 space-y-5">
+          {/* From */}
+          <div className="space-y-2">
+            <label className="block text-[10px] uppercase font-headline font-bold text-muted-foreground tracking-wider">From</label>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (/^\d*\.?\d*$/.test(v)) setAmount(v);
+                }}
+                placeholder="0.00"
+                className="flex-1 rounded-xl border border-[rgba(0,245,255,0.15)] bg-[#0d1515] px-4 py-3.5 text-lg font-mono text-foreground focus:outline-none focus:border-[#63f7ff]/50"
+              />
+              <TokenSelect value={fromToken} onChange={setFromToken} />
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-[10px] uppercase font-headline font-medium text-muted-foreground mb-1">To</label>
-          <select
-            value={toToken}
-            onChange={(e) => setToToken(e.target.value)}
-            className="w-full bg-[#0d1515] border border-[rgba(0,245,255,0.15)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#63f7ff]"
+          {/* Arrow */}
+          <div className="flex justify-center">
+            <div className="w-8 h-8 rounded-full border border-[rgba(0,245,255,0.2)] flex items-center justify-center text-[#63f7ff]">
+              ↓
+            </div>
+          </div>
+
+          {/* To */}
+          <div className="space-y-2">
+            <label className="block text-[10px] uppercase font-headline font-bold text-muted-foreground tracking-wider">To</label>
+            <TokenSelect value={toToken} onChange={setToToken} fullWidth />
+          </div>
+
+          {/* Submit */}
+          <button
+            onClick={handleSwap}
+            disabled={!amount || fromToken === toToken}
+            className="w-full rounded-xl bg-[#63f7ff] py-3.5 font-headline font-bold text-sm text-[#002021] hover:bg-cyan-100 transition-all shadow-[0_0_15px_rgba(99,247,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="SUI">SUI</option>
-            <option value="USDC">USDC</option>
-            <option value="USDT">USDT</option>
-            <option value="WETH">WETH</option>
-            <option value="CETUS">CETUS</option>
-          </select>
+            Generate AI Route Path
+          </button>
         </div>
 
-        <button
-          onClick={handleSwap}
-          className="w-full bg-[#63f7ff] text-[#002021] py-3 rounded-xl font-headline font-bold text-sm hover:bg-cyan-100 transition-all shadow-[0_0_15px_rgba(99,247,255,0.2)]"
-        >
-          Generate AI Route Path
-        </button>
+        <p className="text-center text-xs text-muted-foreground">
+          Or type in chat: &quot;swap {amount} {fromToken} to {toToken}&quot;
+        </p>
       </div>
+    </div>
+  );
+}
 
-      <p className="text-xs text-muted-foreground">
-        Or just type in chat: &quot;swap 100 USDC to SUI&quot;
-      </p>
+function TokenSelect({ value, onChange, fullWidth }: { value: string; onChange: (v: string) => void; fullWidth?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className={`relative ${fullWidth ? "w-full" : "w-[120px] flex-shrink-0"}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between rounded-xl border border-[rgba(0,245,255,0.15)] bg-[#0d1515] px-4 py-3.5 text-sm font-bold text-foreground focus:outline-none focus:border-[#63f7ff]/50 cursor-pointer"
+      >
+        {value}
+        <span className="text-muted-foreground text-xs">▼</span>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 rounded-xl border border-[rgba(0,245,255,0.15)] bg-[#0d1515] py-1 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+          {TOKENS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => { onChange(t); setOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#63f7ff]/10 transition-colors ${t === value ? "text-[#63f7ff] font-bold" : "text-foreground"}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

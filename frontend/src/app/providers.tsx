@@ -1,13 +1,15 @@
 "use client";
 
-import { createNetworkConfig, SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
-import { getFullnodeUrl } from "@mysten/sui/client";
+import { createDAppKit } from "@mysten/dapp-kit-core";
+import { DAppKitProvider } from "@mysten/dapp-kit-react";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import "@mysten/dapp-kit/dist/index.css";
 
-const { networkConfig } = createNetworkConfig({
-  testnet: { url: getFullnodeUrl("testnet") },
-  mainnet: { url: getFullnodeUrl("mainnet") },
+const dAppKit = createDAppKit({
+  networks: ["mainnet", "testnet"],
+  createClient: (network) => new SuiGrpcClient({ network } as any),
+  defaultNetwork: "mainnet",
+  autoConnect: true,
 });
 
 const queryClient = new QueryClient();
@@ -15,9 +17,9 @@ const queryClient = new QueryClient();
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
-        <WalletProvider autoConnect>{children}</WalletProvider>
-      </SuiClientProvider>
+      <DAppKitProvider dAppKit={dAppKit}>
+        {children}
+      </DAppKitProvider>
     </QueryClientProvider>
   );
 }

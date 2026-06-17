@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
 import { Transaction } from "@mysten/sui/transactions";
 import { generateDelegateKey } from "@mysten-incubation/memwal/account";
 
@@ -52,8 +52,8 @@ export function useMemwalSetup(walletAddress: string | null) {
     return null;
   });
 
-  const suiClient = useSuiClient();
-  const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
+  const suiClient = useCurrentClient();
+  const { signAndExecuteTransaction: signAndExecute } = useDAppKit();
 
   /**
    * Check if user already has a MemWalAccount on-chain.
@@ -71,19 +71,17 @@ export function useMemwalSetup(walletAddress: string | null) {
 
     // Check on-chain via registry
     try {
-      const result = await suiClient.devInspectTransactionBlock({
+      const tx = new Transaction();
+      tx.moveCall({
+        target: `${MEMWAL_PACKAGE_ID}::account::has_account`,
+        arguments: [
+          tx.object(MEMWAL_REGISTRY_ID),
+          tx.pure.address(walletAddress),
+        ],
+      });
+      const result = await (suiClient as any).devInspectTransactionBlock({
         sender: walletAddress,
-        transactionBlock: (() => {
-          const tx = new Transaction();
-          tx.moveCall({
-            target: `${MEMWAL_PACKAGE_ID}::account::has_account`,
-            arguments: [
-              tx.object(MEMWAL_REGISTRY_ID),
-              tx.pure.address(walletAddress),
-            ],
-          });
-          return tx;
-        })() as unknown as Parameters<typeof suiClient.devInspectTransactionBlock>[0]["transactionBlock"],
+        transactionBlock: tx,
       });
 
       // Parse result - if account exists but no local key, user needs to re-authorize
@@ -134,7 +132,7 @@ export function useMemwalSetup(walletAddress: string | null) {
       await new Promise((r) => setTimeout(r, 2000));
 
       // Query the user's MemWalAccount object
-      const objects = await suiClient.getOwnedObjects({
+      const objects = await (suiClient as any).getOwnedObjects({
         owner: walletAddress,
         filter: {
           StructType: `${MEMWAL_PACKAGE_ID}::account::MemWalAccount`,
@@ -150,7 +148,7 @@ export function useMemwalSetup(walletAddress: string | null) {
       if (!accountId) {
         // Try querying differently - MemWalAccount is shared, not owned
         // Need to find it via events
-        const events = await suiClient.queryEvents({
+        const events = await (suiClient as any).queryEvents({
           query: {
             MoveEventType: `${MEMWAL_PACKAGE_ID}::account::AccountCreated`,
           },

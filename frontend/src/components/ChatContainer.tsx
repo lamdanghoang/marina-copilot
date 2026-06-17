@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
+import { useTransactionExecution } from "@/hooks/useTransactionExecution";
+import { useActionExecution } from "@/hooks/useActionExecution";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { PTBPreview } from "@/components/PTBPreview";
@@ -17,13 +19,24 @@ export function ChatContainer() {
   const currentPreview = useCopilotStore((s) => s.currentPreview);
   const confirmTransaction = useCopilotStore((s) => s.confirmTransaction);
   const cancelPreview = useCopilotStore((s) => s.cancelPreview);
+  const pendingAction = useCopilotStore((s) => s.pendingAction);
   const account = useCurrentAccount();
+  const { executeTransaction } = useTransactionExecution();
+  const { executeAction } = useActionExecution();
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isProcessing, currentPreview]);
+
+  // Execute pending action (capsule/file) when received
+  useEffect(() => {
+    if (pendingAction) {
+      executeAction(pendingAction.action, pendingAction.params);
+      useCopilotStore.setState({ pendingAction: null });
+    }
+  }, [pendingAction, executeAction]);
 
   const isWalletConnected = !!walletAddress || !!account?.address;
 
@@ -54,7 +67,7 @@ export function ChatContainer() {
             <div className="max-w-[90%]">
               <PTBPreview
                 preview={currentPreview}
-                onConfirm={confirmTransaction}
+                onConfirm={executeTransaction}
                 onCancel={cancelPreview}
                 isExecuting={isProcessing}
               />

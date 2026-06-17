@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSuiClient } from "@mysten/dapp-kit";
+import { useCurrentClient } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { secureGet, secureClearAll } from "@/lib/secure-storage";
 import { getStoredZkLoginState } from "@/lib/zklogin";
@@ -14,7 +14,7 @@ import { formatBalance } from "@/lib/formatting";
  */
 export function useZkLoginSession() {
   const [isZkLogin, setIsZkLogin] = useState(false);
-  const suiClient = useSuiClient();
+  const suiClient = useCurrentClient();
   const connectWallet = useCopilotStore((s) => s.connectWallet);
   const disconnectWallet = useCopilotStore((s) => s.disconnectWallet);
   const walletAddress = useCopilotStore((s) => s.walletAddress);
@@ -50,7 +50,7 @@ export function useZkLoginSession() {
     // Fetch balance and connect
     setIsZkLogin(true);
     try {
-      const balanceData = await suiClient.getBalance({ owner: address });
+      const balanceData = await (suiClient as any).getBalance({ owner: address });
       const rawBalance = BigInt(balanceData.totalBalance);
       const formattedBalance = Number(formatBalance(rawBalance, 9, 2));
 

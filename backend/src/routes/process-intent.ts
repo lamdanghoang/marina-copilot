@@ -21,6 +21,7 @@ import {
   PortfolioBalance,
   TokenBalance,
   QueryIntent,
+  CreateCapsuleIntent,
 } from "../types";
 
 /**
@@ -179,12 +180,42 @@ router.post("/", async (req: Request, res: Response) => {
     let compiledResult;
 
     if (intent.action === "query") {
-      // Read-only action — respond directly, no PTB needed
       const infoMessage = await handleQueryIntent(intent, balances || [], walletAddress);
       const response: ProcessIntentResponse = {
         type: "info",
         memoryIndicator: parserOutput.memoryIndicator,
         info: { message: infoMessage },
+      };
+      return res.json(response);
+    }
+
+    if (intent.action === "create_capsule") {
+      const capsuleIntent = intent as CreateCapsuleIntent;
+      const response: ProcessIntentResponse = {
+        type: "action_request",
+        memoryIndicator: parserOutput.memoryIndicator,
+        actionRequest: {
+          action: "create_capsule",
+          params: {
+            content: capsuleIntent.content,
+            unlockAfterMinutes: capsuleIntent.unlockAfterMinutes,
+            recipient: capsuleIntent.recipient || "self",
+          },
+          message: `I'll create a time capsule that unlocks in ${capsuleIntent.unlockAfterMinutes} minutes. The message will be encrypted with Seal and stored on Walrus.`,
+        },
+      };
+      return res.json(response);
+    }
+
+    if (intent.action === "upload_file") {
+      const response: ProcessIntentResponse = {
+        type: "action_request",
+        memoryIndicator: parserOutput.memoryIndicator,
+        actionRequest: {
+          action: "upload_file",
+          params: {},
+          message: "I'll help you upload a file to Walrus decentralized storage. Please select a file.",
+        },
       };
       return res.json(response);
     }

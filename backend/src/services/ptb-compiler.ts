@@ -214,12 +214,13 @@ export async function compileSwap(
 
   // 6. Build route path for metadata
   const routePath = buildRoutePath(routerData, fromTokenConfig.symbol, toTokenConfig.symbol);
+  const provider = routerData.routes[0]?.path[0]?.provider || "Cetus";
 
   // 7. Build steps
   const steps: PTBStep[] = [
     {
       index: 1,
-      description: `Swap ${intent.amount} ${intent.fromToken} → ~${estimatedOutput.toFixed(4)} ${intent.toToken} via Cetus`,
+      description: `Swap ${intent.amount} ${intent.fromToken} → ~${estimatedOutput.toFixed(4)} ${intent.toToken} via ${provider}`,
       type: "swap",
     },
     {
@@ -278,7 +279,7 @@ async function findRouteWithTimeout(
       CETUS_AGGREGATOR_ENDPOINT,
       walletAddress,
       client,
-      Env.Testnet
+      Env.Mainnet
     );
 
     const params: FindRouterParams = {
@@ -324,7 +325,7 @@ async function buildSwapTransaction(
     CETUS_AGGREGATOR_ENDPOINT,
     walletAddress,
     client,
-    Env.Testnet
+    Env.Mainnet
   );
 
   const txb = new Transaction();
@@ -405,17 +406,20 @@ function calculatePriceImpact(
     return 0;
   }
 
-  // Testnet pools have unreliable initialPrice from Cetus.
-  // Use a realistic estimate: small swaps have ~0.1-0.5% impact.
-  // For production: compare against oracle price (Pyth/Switchboard).
   const amountIn = Number(routerData.amountIn.toString());
-  if (amountIn === 0) return 0;
+  const amountOut = Number(routerData.amountOut.toString());
+  if (amountIn === 0 || amountOut === 0) return 0;
 
-  // Heuristic: impact scales roughly with amount
-  // Base 0.1% + 0.01% per unit (in raw smallest unit / 10^9 for SUI scale)
-  const suiEquivalent = amountIn / 1e9;
-  const estimated = 0.1 + suiEquivalent * 0.02;
-  return Math.round(Math.min(estimated, 10) * 100) / 100;
+  const firstRoute = routerData.routes[0];
+  if (!firstRoute.initialPrice || firstRoute.initialPrice.toNumber() === 0) {
+    return 0.1;
+  }
+
+  const initialPrice = firstRoute.initialPrice.toNumber();
+  const executionPrice = amountOut / amountIn;
+  const impact = Math.abs((executionPrice - initialPrice) / initialPrice) * 100;
+
+  return Math.round(Math.min(impact, 50) * 100) / 100;
 }
 
 // --- Route Path Builder ---

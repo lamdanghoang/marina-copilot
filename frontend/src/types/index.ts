@@ -81,7 +81,18 @@ export interface QueryIntent {
   queryType: "balance" | "history";
 }
 
-export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent;
+export interface CreateCapsuleIntent {
+  action: "create_capsule";
+  content: string;
+  unlockAfterMinutes: number;
+  recipient?: string;
+}
+
+export interface UploadFileIntent {
+  action: "upload_file";
+}
+
+export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent | CreateCapsuleIntent | UploadFileIntent;
 
 // --- PTB & Transaction ---
 
@@ -137,7 +148,7 @@ export interface ProcessIntentRequest {
 }
 
 export interface ProcessIntentResponse {
-  type: "clarification" | "preview" | "error" | "info";
+  type: "clarification" | "preview" | "error" | "info" | "action_request";
   // Optional memory indicator shown when preferences are applied
   memoryIndicator?: string | null;
   // When type = "clarification"
@@ -160,6 +171,12 @@ export interface ProcessIntentResponse {
   };
   // When type = "info" (read-only query response)
   info?: {
+    message: string;
+  };
+  // When type = "action_request"
+  actionRequest?: {
+    action: "create_capsule" | "upload_file";
+    params: Record<string, unknown>;
     message: string;
   };
 }
