@@ -10,7 +10,7 @@ import { parseIntent } from "../services/intent-parser";
 import { compileSwap, compileStake, compileTransfer } from "../services/ptb-compiler";
 import { assessRisks } from "../services/guardian";
 import { recall } from "../services/memory-service";
-import { SuiClient } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { config } from "../lib/config";
 import {
   ProcessIntentRequest,
@@ -30,14 +30,14 @@ import {
 async function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[], walletAddress: string): Promise<string> {
   if (intent.queryType === "balance") {
     try {
-      const client = new SuiClient({ url: config.sui.rpcUrl });
+      const client = new SuiGrpcClient({ network: "testnet", baseUrl: config.sui.rpcUrl } as any) as any;
       const allBalances = await client.getAllBalances({ owner: walletAddress });
 
       if (!allBalances || allBalances.length === 0) {
         return "Your wallet has no tokens yet.";
       }
 
-      const lines = allBalances.map((b) => {
+      const lines = allBalances.map((b: any) => {
         const raw = BigInt(b.totalBalance);
         // Detect decimals from coin type
         const isSui = b.coinType === "0x2::sui::SUI";
@@ -61,7 +61,7 @@ async function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[], 
 
   if (intent.queryType === "history") {
     try {
-      const client = new SuiClient({ url: config.sui.rpcUrl });
+      const client = new SuiGrpcClient({ network: "testnet", baseUrl: config.sui.rpcUrl } as any) as any;
       const txs = await client.queryTransactionBlocks({
         filter: { FromAddress: walletAddress },
         options: { showEffects: true, showInput: true },
@@ -73,7 +73,7 @@ async function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[], 
         return "No transactions found for your wallet yet.";
       }
 
-      const lines = txs.data.map((tx) => {
+      const lines = txs.data.map((tx: any) => {
         const status = tx.effects?.status?.status === "success" ? "✅" : "❌";
         const gasUsed = tx.effects?.gasUsed;
         const gas = gasUsed

@@ -3,7 +3,7 @@
 // Converts structured intents into executable Sui PTBs
 // ============================================================
 
-import { SuiClient } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { Transaction } from "@mysten/sui/transactions";
 import { AggregatorClient, Env, FindRouterParams } from "@cetusprotocol/aggregator-sdk";
 import BN from "bn.js";
@@ -39,11 +39,11 @@ const SUI_DECIMALS = 9;
 
 // --- SUI Client Singleton ---
 
-let suiClient: SuiClient | null = null;
+let suiClient: any = null;
 
-function getSuiClient(): SuiClient {
+function getSuiClient(): any {
   if (!suiClient) {
-    suiClient = new SuiClient({ url: config.sui.rpcUrl });
+    suiClient = new SuiGrpcClient({ network: "testnet", baseUrl: config.sui.rpcUrl } as any);
   }
   return suiClient;
 }
@@ -334,7 +334,7 @@ async function buildSwapTransaction(
   await aggregator.fastRouterSwap({
     routers: routerData.routes,
     byAmountIn: true,
-    txb,
+    txb: txb as any,
     slippage,
     isMergeTragetCoin: true,
     refreshAllCoins: true,
@@ -552,7 +552,7 @@ export async function compileStake(
   const currentEpoch = Number(systemState.epoch);
 
   // Calculate APY for each validator
-  const validatorsWithApy = validators.map((v) => ({
+  const validatorsWithApy = validators.map((v: any) => ({
     address: v.suiAddress,
     name: v.name,
     apy: calculateValidatorApy(
@@ -568,12 +568,12 @@ export async function compileStake(
   if (intent.validator) {
     // Find by name (case-insensitive)
     selectedValidator = validatorsWithApy.find(
-      (v) => v.name.toLowerCase() === intent.validator!.toLowerCase()
+      (v: any) => v.name.toLowerCase() === intent.validator!.toLowerCase()
     );
     if (!selectedValidator) {
       // Try partial match
       selectedValidator = validatorsWithApy.find(
-        (v) => v.name.toLowerCase().includes(intent.validator!.toLowerCase())
+        (v: any) => v.name.toLowerCase().includes(intent.validator!.toLowerCase())
       );
     }
     if (!selectedValidator) {
@@ -585,7 +585,7 @@ export async function compileStake(
     }
   } else {
     // Select highest APY validator
-    selectedValidator = validatorsWithApy.reduce((best, current) =>
+    selectedValidator = validatorsWithApy.reduce((best: any, current: any) =>
       current.apy > best.apy ? current : best
     );
   }
