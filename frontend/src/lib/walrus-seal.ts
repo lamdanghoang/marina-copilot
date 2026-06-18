@@ -22,6 +22,7 @@ const SEAL_PACKAGE_ID = networkConfig.sealPackageId;
 const SEAL_KEY_SERVERS = [
   { objectId: "0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", weight: 1 },
   { objectId: "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8", weight: 1 },
+  { objectId: "0x6a0726a1ea3d62ba2f2ae51104f2c3633c003fb75621d06fde47f04dc930ba06", weight: 1 },
 ];
 
 // === Types ===
@@ -145,16 +146,20 @@ export async function walrusUpload(
 export async function sealEncrypt(
   plaintext: string,
   unlockTimeMs: number,
+  recipient: string,
 ): Promise<{ encryptedData: Uint8Array; nonce: Uint8Array; idHex: string }> {
   const client = createSealClient();
 
+  // id = bcs(unlock_time) + bcs(recipient_address) — matches seal_policy::seal_approve
   const timeBytes = bcs.u64().serialize(BigInt(unlockTimeMs)).toBytes();
+  const addrBytes = bcs.Address.serialize(recipient).toBytes();
+  const idBytes = new Uint8Array(timeBytes.length + addrBytes.length);
+  idBytes.set(timeBytes, 0);
+  idBytes.set(addrBytes, timeBytes.length);
+  const idHex = toHex(idBytes);
+
   const nonce = new Uint8Array(32);
   crypto.getRandomValues(nonce);
-  const idBytes = new Uint8Array(timeBytes.length + nonce.length);
-  idBytes.set(timeBytes, 0);
-  idBytes.set(nonce, timeBytes.length);
-  const idHex = toHex(idBytes);
 
   const data = new TextEncoder().encode(plaintext);
 
@@ -200,7 +205,7 @@ export async function sealDecrypt(
 
   const tx = new Transaction();
   tx.moveCall({
-    target: `${SEAL_PACKAGE_ID}::seal_timelock::seal_approve`,
+    target: `${SEAL_PACKAGE_ID}::seal_policy::seal_approve`,
     arguments: [
       tx.pure.vector("u8", idBytes),
       tx.object("0x6"), // Clock
@@ -241,7 +246,7 @@ export async function createCapsule(params: {
 
   // 1. Seal encrypt
   params.onProgress?.("Encrypting with Seal...");
-  const { encryptedData, nonce, idHex } = await sealEncrypt(params.content, unlockTimeMs);
+  const { encryptedData, nonce, idHex } = await sealEncrypt(params.content, unlockTimeMs, params.recipient || params.sender);
 
   // 2. Upload encrypted blob to Walrus (user signs 2 txs)
   const blobId = await walrusUpload(
