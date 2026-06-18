@@ -53,26 +53,12 @@ export default function CapsulesPage() {
     setUnlocking(true);
     try {
       const { unlockCapsule } = await import("@/lib/walrus-seal");
-      const { isZkLoginSession } = await import("@/lib/zklogin-signer");
-
-      const signPersonalMessage = async (input: { message: Uint8Array }) => {
-        if (!account && isZkLoginSession()) {
-          const { getStoredZkLoginState } = await import("@/lib/zklogin");
-          const state = await getStoredZkLoginState();
-          if (!state) throw new Error("No zkLogin session");
-          const sig = await state.ephemeralKeyPair.signPersonalMessage(input.message);
-          return { signature: sig.signature };
-        }
-        const res = await (dAppKit as any).signPersonalMessage({ message: input.message });
-        return { signature: res.signature };
-      };
 
       const content = await unlockCapsule({
         blobId: capsule.blob_id,
-        idHex: capsule.nonce ? Array.from(capsule.nonce).map((b: any) => b.toString(16).padStart(2, "0")).join("") : "",
         unlockTimeMs: Number(capsule.unlock_date),
+        recipient: capsule.recipient,
         userAddress: walletAddress,
-        signPersonalMessage,
       });
       setDecryptedContent(content);
       toast("Capsule decrypted!", "success");
@@ -138,7 +124,7 @@ export default function CapsulesPage() {
 
         {/* Decrypted content modal */}
         {decryptedContent && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDecryptedContent(null)}>
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDecryptedContent(null)}>
             <div className="glass-panel rounded-2xl p-6 max-w-md w-full mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
               <h3 className="font-headline text-lg font-bold text-[#63f7ff]">🔓 Capsule Unlocked</h3>
               <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg">{decryptedContent}</p>
@@ -148,8 +134,8 @@ export default function CapsulesPage() {
         )}
 
         {unlocking && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="animate-pulse text-[#63f7ff]">Decrypting...</div>
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+            <div className="animate-pulse text-[#63f7ff] text-lg">Decrypting...</div>
           </div>
         )}
       </div>
@@ -167,9 +153,9 @@ function CapsuleCard({ capsule: c, now, onUnlock }: { capsule: any; now: number;
       <div className="flex justify-between items-start mb-4">
         <div>
           <span className={`text-[10px] uppercase tracking-widest ${locked ? "text-[#63f7ff]/60" : "text-green-400"}`}>
-            {locked ? "🔒 Locked" : "🔓 Click to unlock"}
+            {locked ? "⏳ Waiting" : "🔓 Click to unlock"}
           </span>
-          <h3 className="font-headline text-sm font-bold mt-1 font-mono">{c.recipient?.slice(0, 8)}...{c.recipient?.slice(-4)}</h3>
+          <h3 className="font-headline text-sm font-bold mt-1 font-mono">From: {c.owner?.slice(0, 8)}...{c.owner?.slice(-4)}</h3>
         </div>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted text-[#63f7ff]">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>

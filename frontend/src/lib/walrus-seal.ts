@@ -179,25 +179,23 @@ export async function sealDecrypt(
   encryptedData: Uint8Array,
   idHex: string,
   userAddress: string,
-  signPersonalMessage: SignPersonalMessage,
 ): Promise<string> {
+  const { Ed25519Keypair } = await import("@mysten/sui/keypairs/ed25519");
   const client = createSealClient();
   const suiClient = createSuiClient();
 
-  // Create session key
+  // Create ephemeral keypair for session (self-signed, no wallet needed)
+  const sessionKp = new Ed25519Keypair();
+
   const sessionKey = await SessionKey.create({
-    address: userAddress,
+    address: sessionKp.getPublicKey().toSuiAddress(),
     packageId: SEAL_PACKAGE_ID,
     ttlMin: 10,
+    signer: sessionKp,
     suiClient: suiClient as any,
   });
 
-  // Sign personal message for session
-  const message = sessionKey.getPersonalMessage();
-  const { signature } = await signPersonalMessage({ message });
-  sessionKey.setPersonalMessageSignature(signature);
-
-  // Build seal_approve tx (time-lock check)
+  // Build seal_approve tx
   const idBytes: number[] = [];
   for (let i = 0; i < idHex.length; i += 2) {
     idBytes.push(parseInt(idHex.substring(i, i + 2), 16));
@@ -303,18 +301,25 @@ export async function uploadFileToWalrus(params: {
 
 export async function unlockCapsule(params: {
   blobId: string;
-  idHex: string;
   unlockTimeMs: number;
+  recipient: string;
   userAddress: string;
-  signPersonalMessage: SignPersonalMessage;
 }): Promise<string> {
   if (Date.now() < params.unlockTimeMs) {
     throw new Error("Capsule not yet unlockable");
   }
 
+  // Reconstruct id: bcs(unlock_time) + bcs(recipient) — must match what was used during encrypt
+  const timeBytes = bcs.u64().serialize(BigInt(params.unlockTimeMs)).toBytes();
+  const addrBytes = bcs.Address.serialize(params.recipient).toBytes();
+  const idBytes = new Uint8Array(timeBytes.length + addrBytes.length);
+  idBytes.set(timeBytes, 0);
+  idBytes.set(addrBytes, timeBytes.length);
+  const idHex = toHex(idBytes);
+
   // Download from Walrus
   const encryptedData = await walrusDownload(params.blobId);
 
   // Decrypt with Seal
-  return sealDecrypt(encryptedData, params.idHex, params.userAddress, params.signPersonalMessage);
+  return sealDecrypt(encryptedData, idHex, params.userAddress);
 }
