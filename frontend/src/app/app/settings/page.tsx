@@ -119,9 +119,16 @@ export default function SettingsPage() {
 
       {/* Account */}
       <Section title="Account">
-        <Item label="Wallet" value={walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-4)}` : "Not connected"} />
+        {walletAddress ? <CopyItem label="Wallet" value={walletAddress} /> : <Item label="Wallet" value="Not connected" />}
         <Item label="MemWal" value={hasMemwal ? "✅ Active" : "❌ Not configured"} />
-        {accountId && <Item label="Account ID" value={accountId.slice(0, 16) + "..."} />}
+        {accountId && (
+          <div className="flex justify-between items-center py-1">
+            <span className="text-sm text-gray-300">Account ID</span>
+            <a href={`${networkConfig.explorerBase.replace("/tx/", "/object/")}${accountId}`} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-400 font-mono hover:text-[#63f7ff] transition-colors underline decoration-dotted">
+              {accountId.slice(0, 10)}...{accountId.slice(-4)} ↗
+            </a>
+          </div>
+        )}
         {accountActive !== null && <Item label="On-Chain Status" value={accountActive ? "🟢 Active" : "🔴 Deactivated"} />}
         {hasMemwal && (
           <>
@@ -165,6 +172,29 @@ function Item({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between items-center py-1">
       <span className="text-sm text-gray-300">{label}</span>
       <span className="text-sm text-gray-400 font-mono truncate ml-4 max-w-[200px]">{value}</span>
+    </div>
+  );
+}
+
+
+function CopyItem({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="flex justify-between items-center py-1">
+      <span className="text-sm text-gray-300">{label}</span>
+      <button onClick={handleCopy} className="flex items-center gap-1.5 text-sm text-gray-400 font-mono hover:text-[#63f7ff] transition-colors">
+        <span>{value.slice(0, 8)}...{value.slice(-4)}</span>
+        {copied ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        )}
+      </button>
     </div>
   );
 }

@@ -39,6 +39,7 @@ export interface CapsuleData {
   createdAt: number;
   recipient: string;
   contentPreview: string;
+  digest?: string;
 }
 
 export interface UploadedFile {
@@ -277,7 +278,8 @@ export async function createCapsule(params: {
       tx.object("0x6"), // Clock
     ],
   });
-  await params.signAndExecute({ transaction: tx });
+  const capsuleResult = await params.signAndExecute({ transaction: tx });
+  const capsuleDigest = (capsuleResult as any)?.Transaction?.digest ?? (capsuleResult as any)?.digest ?? "";
 
   return {
     id: `capsule_${Date.now()}`,
@@ -288,6 +290,7 @@ export async function createCapsule(params: {
     createdAt: Date.now(),
     recipient,
     contentPreview: params.content.slice(0, 50) + (params.content.length > 50 ? "..." : ""),
+    digest: capsuleDigest,
   };
 }
 

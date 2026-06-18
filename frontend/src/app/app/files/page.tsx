@@ -118,7 +118,7 @@ export default function FilesPage() {
         <div className="space-y-3">
           {files.map((file, i) => (
             <div key={i} className="glass-panel rounded-xl p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#63f7ff]/10 flex items-center justify-center text-[#63f7ff] text-lg">📄</div>
+              <div className="w-10 h-10 rounded-lg bg-[#63f7ff]/10 flex items-center justify-center text-[#63f7ff] text-lg">{getFileIcon(file.name)}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold truncate">{file.name}</p>
                 <p className="text-[10px] text-muted-foreground font-mono">{file.blobId.slice(0, 24)}...</p>
@@ -155,4 +155,17 @@ export default function FilesPage() {
       </div>
     </div>
   );
+}
+
+function getFileIcon(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase() || "";
+  if (["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext)) return "🖼️";
+  if (["pdf"].includes(ext)) return "📕";
+  if (["doc", "docx", "txt", "md"].includes(ext)) return "📝";
+  if (["xls", "xlsx", "csv"].includes(ext)) return "📊";
+  if (["mp4", "mov", "avi", "webm"].includes(ext)) return "🎬";
+  if (["mp3", "wav", "ogg"].includes(ext)) return "🎵";
+  if (["zip", "rar", "tar", "gz"].includes(ext)) return "📦";
+  if (["json", "js", "ts", "py", "rs"].includes(ext)) return "💻";
+  return "📄";
 }

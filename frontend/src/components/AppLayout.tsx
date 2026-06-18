@@ -97,13 +97,13 @@ export function AppLayout() {
           <div className="space-y-3">
             {balances.map((b) => (
               <div key={b.symbol} className="glass-panel rounded-xl p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#63f7ff]/10 flex items-center justify-center text-sm font-bold text-[#63f7ff]">
-                  {b.symbol.slice(0, 1)}
+                <div className="w-10 h-10 rounded-full bg-[#63f7ff]/10 flex items-center justify-center text-sm font-bold text-[#63f7ff] overflow-hidden">
+                  {b.symbol === "SUI" ? <img src="/sui-logo.svg" alt="SUI" className="w-6 h-6" /> : b.symbol === "WAL" ? <img src="/wal-logo.svg" alt="WAL" className="w-6 h-6" /> : b.symbol === "USDC" ? <img src="/usdc-logo.png" alt="USDC" className="w-6 h-6" /> : b.symbol.slice(0, 1)}
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-sm">{b.symbol}</p>
                   <p className="text-[10px] text-muted-foreground">
-                    {b.symbol === "SUI" ? "Native Token" : "Stablecoin"}
+                    {b.symbol === "SUI" ? "Native Token" : b.symbol === "WAL" ? "Walrus" : b.symbol === "USDC" ? "Stablecoin" : "Token"}
                   </p>
                 </div>
                 <div className="text-right">

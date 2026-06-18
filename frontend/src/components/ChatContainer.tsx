@@ -40,6 +40,10 @@ export function ChatContainer() {
 
   const isWalletConnected = !!walletAddress || !!account?.address;
 
+  const handleFileAttach = (file: File) => {
+    executeAction("upload_file", { file });
+  };
+
   return (
     <div className="flex h-full flex-col">
       {/* Messages area */}
@@ -81,6 +85,7 @@ export function ChatContainer() {
       {/* Input */}
       <ChatInput
         onSend={sendMessage}
+        onFileAttach={handleFileAttach}
         isDisabled={isProcessing || !isWalletConnected}
         placeholder={
           !isWalletConnected ? "Connect wallet to start" : undefined

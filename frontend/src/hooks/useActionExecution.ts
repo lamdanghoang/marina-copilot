@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore, saveMessages } from "@/store/copilot-store";
 import { remember } from "@/lib/api-client";
+import { networkConfig } from "@/lib/config";
 import type { CapsuleData, UploadedFile } from "@/lib/walrus-seal";
 import type { ChatMessage } from "@/types";
 
@@ -49,7 +50,12 @@ export function useActionExecution() {
     if (action === "create_capsule") {
       await executeCapsuleAction(params, sender, signAndExecute);
     } else if (action === "upload_file") {
-      triggerFileUpload(fileInputRef, sender, signAndExecute);
+      const file = params.file as File | undefined;
+      if (file) {
+        await executeFileUpload(file, sender, signAndExecute);
+      } else {
+        triggerFileUpload(fileInputRef, sender, signAndExecute);
+      }
     }
   }, [account, dAppKit]);
 
@@ -96,8 +102,9 @@ async function executeCapsuleAction(
     saveCapsules(existing);
 
     const unlockDate = new Date(capsule.unlockTimeMs).toLocaleString();
+    const explorerUrl = capsule.digest ? `https://suiscan.xyz/${networkConfig.network}/tx/${capsule.digest}` : "";
     addMessage(
-      `✅ Time Capsule created!\n\n🔒 Encrypted with Seal\n🐘 Stored on Walrus: ${capsule.blobId.slice(0, 16)}...\n⏰ Unlocks: ${unlockDate}\n📬 Recipient: ${capsule.recipient}`,
+      `✅ Time Capsule created!\n\n🔒 Encrypted with Seal\n🐘 Stored on Walrus: ${capsule.blobId.slice(0, 16)}...\n⏰ Unlocks: ${unlockDate}\n📬 Recipient: ${capsule.recipient}${explorerUrl ? `\n🔗 [View on Explorer](${explorerUrl})` : ""}`,
       "success",
     );
 
@@ -107,6 +114,25 @@ async function executeCapsuleAction(
     });
   } catch (error) {
     addMessage(`❌ Capsule creation failed: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+  } finally {
+    useCopilotStore.setState({ isProcessing: false, statusText: "" });
+  }
+}
+
+
+async function executeFileUpload(file: File, sender: string, signAndExecute: (args: { transaction: any }) => Promise<any>) {
+  useCopilotStore.setState({ isProcessing: true, statusText: "Uploading..." });
+  try {
+    const { uploadFileToWalrus } = await import("@/lib/walrus-seal");
+    const result = await uploadFileToWalrus({ file, sender, signAndExecute, onProgress: (step) => useCopilotStore.setState({ statusText: step }) });
+    const existing = loadFiles();
+    existing.push(result);
+    saveFiles(existing);
+    const sizeStr = result.size > 1024 ? `${(result.size / 1024).toFixed(1)} KB` : `${result.size} B`;
+    addMessage(`✅ File uploaded to Walrus!\n\n📄 ${result.name} (${sizeStr})\n🐘 Blob ID: ${result.blobId.slice(0, 20)}...`, "success");
+    rememberAction(sender, `Uploaded file "${result.name}" (${sizeStr}) to Walrus: ${result.blobId.slice(0, 16)}`, { action: "upload_file", blobId: result.blobId, fileName: result.name, size: result.size });
+  } catch (error) {
+    addMessage(`❌ Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
   } finally {
     useCopilotStore.setState({ isProcessing: false, statusText: "" });
   }

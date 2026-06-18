@@ -34,7 +34,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
     return (
       <div className={`flex items-center gap-3 ${className ?? ""}`}>
         <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-400 font-bold tracking-wider">zkLogin</span>
-        <span className="font-mono text-xs text-[#63f7ff]">{truncateAddress(walletAddress)}</span>
+        <span className="font-mono text-xs text-[#63f7ff] cursor-pointer hover:text-white transition-colors" onClick={() => { navigator.clipboard.writeText(walletAddress); }} title="Click to copy">{truncateAddress(walletAddress)}</span>
         <button
           onClick={zkLogout}
           className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
@@ -49,7 +49,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
   if (account?.address) {
     return (
       <div className={`flex items-center gap-3 ${className ?? ""}`}>
-        <span className="font-mono text-xs text-[#63f7ff]">{truncateAddress(account.address)}</span>
+        <span className="font-mono text-xs text-[#63f7ff] cursor-pointer hover:text-white transition-colors" onClick={() => { navigator.clipboard.writeText(account.address); }} title="Click to copy">{truncateAddress(account.address)}</span>
         {balance && (
           <div className="flex items-center gap-1.5 rounded-full border border-[rgba(0,245,255,0.2)] bg-[#232b2c] px-3 py-1.5">
             <span className="text-xs font-bold text-[#63f7ff]">{balance} SUI</span>
