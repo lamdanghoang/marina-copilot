@@ -50,18 +50,38 @@ export function useMemwalSetup(walletAddress: string | null) {
         },
       };
 
-      // SDK handles "already exists" internally
-      const account = await createAccount({
-        packageId: MEMWAL_PACKAGE_ID,
-        registryId: MEMWAL_REGISTRY_ID,
-        walletSigner,
-        suiClient: suiClient as any,
-        suiNetwork: networkConfig.network,
-      });
+      // Try create account — may fail with abort 3 if already exists
+      let accountId: string;
+      try {
+        const account = await createAccount({
+          packageId: MEMWAL_PACKAGE_ID,
+          registryId: MEMWAL_REGISTRY_ID,
+          walletSigner,
+          suiClient: suiClient as any,
+          suiNetwork: networkConfig.network,
+        });
+        accountId = account.accountId;
+      } catch (err: any) {
+        // Abort code 3 = account already exists, find it via events
+        if (String(err?.message || err).includes("abort code: 3") || String(err).includes("MoveAbort")) {
+          const events = await (suiClient as any).queryEvents({
+            query: { MoveEventType: `${MEMWAL_PACKAGE_ID}::account::AccountCreated` },
+            limit: 50,
+            order: "descending",
+          });
+          const found = (events.data || []).find(
+            (e: any) => e.parsedJson?.owner === walletAddress
+          );
+          if (!found) throw new Error("Account exists but could not find accountId");
+          accountId = found.parsedJson.account_id;
+        } else {
+          throw err;
+        }
+      }
 
       await addDelegateKey({
         packageId: MEMWAL_PACKAGE_ID,
-        accountId: account.accountId,
+        accountId,
         publicKey: delegate.publicKey,
         label: "Marina Copilot",
         walletSigner,
@@ -70,7 +90,7 @@ export function useMemwalSetup(walletAddress: string | null) {
       });
 
       const creds: MemwalCredentials = {
-        accountId: account.accountId,
+        accountId,
         delegateKey: delegate.privateKey,
       };
       saveCredentials(walletAddress, creds);
