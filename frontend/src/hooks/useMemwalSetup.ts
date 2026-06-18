@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
+import { useDAppKit, useCurrentClient, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { createAccount, addDelegateKey, generateDelegateKey } from "@mysten-incubation/memwal/account";
 import { networkConfig } from "@/lib/config";
 import { findMemwalAccount } from "@/lib/sui-graphql";
@@ -30,6 +30,7 @@ export function useMemwalSetup(walletAddress: string | null) {
   const [isSettingUp, setIsSettingUp] = useState(false);
   const suiClient = useCurrentClient();
   const dAppKit = useDAppKit();
+  const account = useCurrentAccount();
 
   const setup = useCallback(async (): Promise<MemwalCredentials | null> => {
     if (!walletAddress) return null;
@@ -37,15 +38,30 @@ export function useMemwalSetup(walletAddress: string | null) {
 
     try {
       const delegate = await generateDelegateKey();
+      const { isZkLoginSession, signAndExecuteZkLogin } = await import("@/lib/zklogin-signer");
+      const useZk = !account && isZkLoginSession();
 
       const walletSigner = {
         address: walletAddress,
         signAndExecuteTransaction: async (input: { transaction: any }) => {
+          if (useZk) {
+            const res = await signAndExecuteZkLogin({ transaction: input.transaction });
+            const digest = (res as any)?.Transaction?.digest ?? (res as any)?.digest ?? "";
+            return { digest };
+          }
           const res = await (dAppKit as any).signAndExecuteTransaction({ transaction: input.transaction });
           const digest = (res as any)?.Transaction?.digest ?? (res as any)?.digest ?? "";
           return { digest };
         },
         signPersonalMessage: async (input: { message: Uint8Array }) => {
+          if (useZk) {
+            // zkLogin doesn't support signPersonalMessage — use ephemeral key directly
+            const { getStoredZkLoginState } = await import("@/lib/zklogin");
+            const state = await getStoredZkLoginState();
+            if (!state) throw new Error("No zkLogin session");
+            const { signature } = await state.ephemeralKeyPair.signPersonalMessage(input.message);
+            return { signature };
+          }
           const res = await (dAppKit as any).signPersonalMessage({ message: input.message });
           return { signature: res.signature };
         },

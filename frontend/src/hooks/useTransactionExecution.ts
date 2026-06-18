@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
+import { useDAppKit, useCurrentClient, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { networkConfig } from "@/lib/config";
 import { Transaction } from "@mysten/sui/transactions";
 import { useCopilotStore, saveMessages } from "@/store/copilot-store";
@@ -101,6 +101,7 @@ export function useTransactionExecution() {
   const { signAndExecuteTransaction } =
     useDAppKit();
   const suiClient = useCurrentClient();
+  const account = useCurrentAccount();
 
   const executeTransaction = useCallback(async () => {
     const store = useCopilotStore.getState();
@@ -139,10 +140,18 @@ export function useTransactionExecution() {
       // Execute transaction with timeout
       // Use type assertion to handle potential version mismatch between
       // @mysten/sui and @mysten/dapp-kit's bundled @mysten/sui
-      const result = await Promise.race([
-        signAndExecuteTransaction({
+      let signPromise: Promise<any>;
+      if (account) {
+        signPromise = signAndExecuteTransaction({
           transaction: tx as unknown as Parameters<typeof signAndExecuteTransaction>[0]["transaction"],
-        }),
+        });
+      } else {
+        const { signAndExecuteZkLogin } = await import("@/lib/zklogin-signer");
+        signPromise = signAndExecuteZkLogin({ transaction: tx });
+      }
+
+      const result = await Promise.race([
+        signPromise,
         timeoutPromise,
       ]);
 
@@ -263,7 +272,7 @@ export function useTransactionExecution() {
         currentPreview: null,
       }));
     }
-  }, [signAndExecuteTransaction]);
+  }, [signAndExecuteTransaction, account]);
 
   return { executeTransaction };
 }

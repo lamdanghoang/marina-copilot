@@ -32,7 +32,13 @@ export default function SettingsPage() {
   }, [walletAddress]);
 
   const signAndExecute = async (tx: Transaction) => {
-    const res = await (dAppKit as any).signAndExecuteTransaction({ transaction: tx });
+    const account = (dAppKit as any).currentAccount;
+    if (account) {
+      const res = await (dAppKit as any).signAndExecuteTransaction({ transaction: tx });
+      return (res as any)?.Transaction?.digest ?? (res as any)?.digest ?? "";
+    }
+    const { signAndExecuteZkLogin } = await import("@/lib/zklogin-signer");
+    const res = await signAndExecuteZkLogin({ transaction: tx });
     return (res as any)?.Transaction?.digest ?? (res as any)?.digest ?? "";
   };
 
