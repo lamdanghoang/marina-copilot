@@ -256,6 +256,23 @@ export async function createCapsule(params: {
     params.onProgress,
   );
 
+  // 3. Create capsule on-chain (metadata)
+  params.onProgress?.("Creating capsule on-chain...");
+  const { Transaction } = await import("@mysten/sui/transactions");
+  const tx = new Transaction();
+  const recipient = params.recipient || params.sender;
+  tx.moveCall({
+    target: `${SEAL_PACKAGE_ID}::capsule::create_capsule`,
+    arguments: [
+      tx.pure.string(blobId),
+      tx.pure.vector("u8", Array.from(nonce)),
+      tx.pure.u64(BigInt(unlockTimeMs)),
+      tx.pure.address(recipient),
+      tx.object("0x6"), // Clock
+    ],
+  });
+  await params.signAndExecute({ transaction: tx });
+
   return {
     id: `capsule_${Date.now()}`,
     blobId,
@@ -263,7 +280,7 @@ export async function createCapsule(params: {
     idHex,
     unlockTimeMs,
     createdAt: Date.now(),
-    recipient: params.recipient || "self",
+    recipient,
     contentPreview: params.content.slice(0, 50) + (params.content.length > 50 ? "..." : ""),
   };
 }
