@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useDAppKit, useCurrentClient } from "@mysten/dapp-kit-react";
 import { createAccount, addDelegateKey, generateDelegateKey } from "@mysten-incubation/memwal/account";
 import { networkConfig } from "@/lib/config";
+import { findMemwalAccount } from "@/lib/sui-graphql";
 
 const MEMWAL_PACKAGE_ID = "0xcf6ad755a1cdff7217865c796778fabe5aa399cb0cf2eba986f4b582047229c6";
 const MEMWAL_REGISTRY_ID = "0xe80f2feec1c139616a86c9f71210152e2a7ca552b20841f2e192f99f75864437";
@@ -50,19 +51,13 @@ export function useMemwalSetup(walletAddress: string | null) {
         },
       };
 
-      // Check if account already exists via events first (avoid abort code 3)
+      // Check if account already exists via GraphQL
       let accountId: string | null = null;
       try {
-        const events = await (suiClient as any).queryEvents({
-          query: { MoveEventType: `${MEMWAL_PACKAGE_ID}::account::AccountCreated` },
-          limit: 50,
-          order: "descending",
-        });
-        const found = (events.data || []).find(
-          (e: any) => e.parsedJson?.owner === walletAddress
-        );
-        if (found) accountId = found.parsedJson.account_id;
-      } catch {}
+        accountId = await findMemwalAccount(MEMWAL_PACKAGE_ID, walletAddress);
+      } catch (e) {
+        console.warn("[MemWal] GraphQL query failed:", e);
+      }
 
       // Only create if not exists
       if (!accountId) {
