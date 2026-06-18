@@ -20,9 +20,9 @@ export async function initZkLogin(currentEpoch: number): Promise<ZkLoginState> {
   const maxEpoch = currentEpoch + 10;
   const nonce = generateNonce(ephemeralKeyPair.getPublicKey(), maxEpoch, randomness);
 
-  await secureSet("zklogin_ephemeral_key", ephemeralKeyPair.getSecretKey());
-  await secureSet("zklogin_randomness", randomness);
-  await secureSet("zklogin_max_epoch", maxEpoch.toString());
+  localStorage.setItem("zklogin_ephemeral_key", ephemeralKeyPair.getSecretKey());
+  localStorage.setItem("zklogin_randomness", randomness);
+  localStorage.setItem("zklogin_max_epoch", maxEpoch.toString());
 
   return { ephemeralKeyPair, randomness, nonce, maxEpoch };
 }
@@ -43,14 +43,18 @@ export async function getZkLoginAddress(jwt: string, userSalt: string): Promise<
 }
 
 export async function getStoredZkLoginState(): Promise<ZkLoginState | null> {
-  const secretKey = await secureGet("zklogin_ephemeral_key");
-  const randomness = await secureGet("zklogin_randomness");
-  const maxEpoch = await secureGet("zklogin_max_epoch");
-  if (!secretKey || !randomness || !maxEpoch) return null;
+  try {
+    const secretKey = localStorage.getItem("zklogin_ephemeral_key");
+    const randomness = localStorage.getItem("zklogin_randomness");
+    const maxEpoch = localStorage.getItem("zklogin_max_epoch");
+    if (!secretKey || !randomness || !maxEpoch) return null;
 
-  const ephemeralKeyPair = Ed25519Keypair.fromSecretKey(secretKey);
-  const nonce = generateNonce(ephemeralKeyPair.getPublicKey(), parseInt(maxEpoch), randomness);
-  return { ephemeralKeyPair, randomness, nonce, maxEpoch: parseInt(maxEpoch) };
+    const ephemeralKeyPair = Ed25519Keypair.fromSecretKey(secretKey);
+    const nonce = generateNonce(ephemeralKeyPair.getPublicKey(), parseInt(maxEpoch), randomness);
+    return { ephemeralKeyPair, randomness, nonce, maxEpoch: parseInt(maxEpoch) };
+  } catch {
+    return null;
+  }
 }
 
 export async function generateUserSalt(sub: string): Promise<string> {

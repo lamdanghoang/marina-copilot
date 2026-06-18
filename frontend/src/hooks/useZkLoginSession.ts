@@ -29,7 +29,7 @@ export function useZkLoginSession() {
     const address = localStorage.getItem("zklogin_address");
     if (!address) return;
 
-    const jwt = await secureGet("zklogin_jwt");
+    const jwt = localStorage.getItem("zklogin_jwt");
     if (!jwt) {
       localStorage.removeItem("zklogin_address");
       return;
@@ -61,6 +61,13 @@ export function useZkLoginSession() {
     } catch {
       connectWallet(address, []);
     }
+
+    // Load memwal credentials from localStorage
+    try {
+      const { loadCredentials } = await import("@/hooks/useMemwalSetup");
+      const creds = loadCredentials(address);
+      if (creds) useCopilotStore.getState().setMemwalCredentials(creds);
+    } catch {}
   };
 
   const logout = () => {

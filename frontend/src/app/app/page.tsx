@@ -21,6 +21,7 @@ export default function AppPage() {
 
   const hasPendingZk = !!localStorage.getItem("zklogin_address");
   const isConnected = !!walletAddress || !!account?.address || hasPendingZk;
+  const isDetecting = hasPendingZk && !walletAddress;
 
   return (
     <div className="relative h-[calc(100vh-4rem)]">
@@ -28,6 +29,11 @@ export default function AppPage() {
         <AppLayout />
       </div>
       {!isConnected && <ConnectOverlay />}
+      {isDetecting && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0A0F1E]">
+          <div className="animate-pulse text-[#63f7ff] text-sm">Loading session...</div>
+        </div>
+      )}
     </div>
   );
 }

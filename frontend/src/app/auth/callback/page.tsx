@@ -41,6 +41,8 @@ export default function AuthCallback() {
       await secureSet("zklogin_jwt", idToken);
       await secureSet("zklogin_salt", userSalt);
       localStorage.setItem("zklogin_address", suiAddress);
+      localStorage.setItem("zklogin_jwt", idToken);
+      localStorage.setItem("zklogin_salt", userSalt);
 
       setStatus("Login successful! Redirecting...");
       setTimeout(() => { window.location.href = "/app"; }, 300);
