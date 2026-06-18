@@ -297,17 +297,43 @@ function buildMemoryContent(
   }
 
   // Stake
-  const content = `Staked SUI with ${metadata.validatorName ?? "validator"} (est. APY ${metadata.estimatedApy ?? 0}%)`;
+  if (metadata.type === "stake") {
+    const content = `Staked SUI with ${metadata.validatorName ?? "validator"} (est. APY ${metadata.estimatedApy ?? 0}%)`;
+    return {
+      type: "transaction",
+      content,
+      metadata: {
+        action: "stake",
+        tokens: ["SUI"],
+        validatorName: metadata.validatorName,
+        estimatedApy: metadata.estimatedApy,
+        outcome: "success",
+        txDigest: digest,
+      },
+    };
+  }
+
+  // Transfer
+  if (metadata.type === "transfer") {
+    const content = `Sent ${metadata.amount ?? "?"} ${metadata.token ?? "token"} to ${metadata.recipient ?? "unknown"}`;
+    return {
+      type: "transaction",
+      content,
+      metadata: {
+        action: "transfer",
+        token: metadata.token,
+        amount: metadata.amount,
+        recipient: metadata.recipient,
+        outcome: "success",
+        txDigest: digest,
+      },
+    };
+  }
+
+  // Fallback
   return {
     type: "transaction",
-    content,
-    metadata: {
-      action: "stake",
-      tokens: ["SUI"],
-      validatorName: metadata.validatorName,
-      estimatedApy: metadata.estimatedApy,
-      outcome: "success",
-      txDigest: digest,
-    },
+    content: `Transaction executed: ${digest}`,
+    metadata: { action: metadata.type, outcome: "success", txDigest: digest },
   };
 }

@@ -110,7 +110,7 @@ export interface PTBStep {
 }
 
 export interface TransactionMetadata {
-  type: "swap" | "stake";
+  type: "swap" | "stake" | "transfer";
   steps: PTBStep[];
   gasEstimate: number;
   // Swap-specific
@@ -122,6 +122,10 @@ export interface TransactionMetadata {
   // Stake-specific
   validatorName?: string;
   estimatedApy?: number;
+  // Transfer-specific
+  token?: string;
+  amount?: number;
+  recipient?: string;
 }
 
 // --- Risk & Guardian ---

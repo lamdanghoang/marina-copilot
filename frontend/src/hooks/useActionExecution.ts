@@ -3,6 +3,7 @@
 import { useCallback, useRef } from "react";
 import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore, saveMessages } from "@/store/copilot-store";
+import { remember } from "@/lib/api-client";
 import type { CapsuleData, UploadedFile } from "@/lib/walrus-seal";
 import type { ChatMessage } from "@/types";
 
@@ -60,6 +61,13 @@ function addMessage(content: string, type: "text" | "success" | "error") {
   });
 }
 
+function rememberAction(walletAddress: string, content: string, metadata: Record<string, unknown>) {
+  const { memwalCredentials } = useCopilotStore.getState();
+  remember(walletAddress, { type: "transaction", content, metadata }, memwalCredentials ?? undefined).catch(() => {
+    console.warn("Failed to store action memory");
+  });
+}
+
 async function executeCapsuleAction(
   params: Record<string, unknown>,
   sender: string,
@@ -88,6 +96,11 @@ async function executeCapsuleAction(
       `✅ Time Capsule created!\n\n🔒 Encrypted with Seal\n🐘 Stored on Walrus: ${capsule.blobId.slice(0, 16)}...\n⏰ Unlocks: ${unlockDate}\n📬 Recipient: ${capsule.recipient}`,
       "success",
     );
+
+    // Remember action
+    rememberAction(sender, `Created time capsule (unlocks ${unlockDate}), stored on Walrus: ${capsule.blobId.slice(0, 16)}`, {
+      action: "create_capsule", blobId: capsule.blobId, unlockTimeMs: capsule.unlockTimeMs, recipient: capsule.recipient,
+    });
   } catch (error) {
     addMessage(`❌ Capsule creation failed: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
   } finally {
@@ -129,6 +142,11 @@ function triggerFileUpload(
 
       const sizeStr = result.size > 1024 ? `${(result.size / 1024).toFixed(1)} KB` : `${result.size} B`;
       addMessage(`✅ File uploaded to Walrus!\n\n📄 ${result.name} (${sizeStr})\n🐘 Blob ID: ${result.blobId.slice(0, 20)}...`, "success");
+
+      // Remember action
+      rememberAction(sender, `Uploaded file "${result.name}" (${sizeStr}) to Walrus: ${result.blobId.slice(0, 16)}`, {
+        action: "upload_file", blobId: result.blobId, fileName: result.name, size: result.size,
+      });
     } catch (error) {
       addMessage(`❌ Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
     } finally {
