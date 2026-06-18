@@ -33,7 +33,7 @@ export async function signAndExecuteZkLogin(args: { transaction: any }): Promise
   // Get zkProof from Enoki
   const proof = await getZkProofFromEnoki({
     jwt,
-    ephemeralPublicKey: state.ephemeralKeyPair.getPublicKey().toBase64(),
+    ephemeralPublicKey: state.ephemeralKeyPair.getPublicKey(),
     maxEpoch: state.maxEpoch,
     randomness: state.randomness || (await secureGet("zklogin_randomness")) || "",
     salt,
