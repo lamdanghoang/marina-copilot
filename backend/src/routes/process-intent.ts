@@ -146,13 +146,23 @@ router.post("/", async (req: Request, res: Response) => {
   }
 
   try {
-    // --- Step 1: Recall memories (MemWal) — graceful degradation ---
+    // --- Step 1: Recall memories (MemWal + frontend localStorage) ---
     let memories: MemoryRecord[] = [];
     try {
       memories = await recall(walletAddress, message, 10, memwalCredentials);
     } catch (error) {
-      // Silent degradation — proceed without memory
       console.error("[Memory] Recall failed:", error);
+    }
+
+    // Merge with frontend-sent local memories (fallback when no MemWal)
+    const localMemories: string[] = req.body.memories || [];
+    if (localMemories.length > 0 && memories.length === 0) {
+      memories = localMemories.slice(-10).map((content, i) => ({
+        id: `local-${i}`,
+        content,
+        timestamp: Date.now(),
+        type: "transaction" as const,
+      }));
     }
 
     // --- Step 2: Parse intent (LLM) ---

@@ -76,11 +76,15 @@ export async function processIntent(
 ): Promise<ProcessIntentResponse> {
   const { controller, timeoutId } = createTimeoutController();
 
+  // Attach local memories to request
+  const memories = getLocalMemories(request.walletAddress);
+  const requestWithMemories = { ...request, memories };
+
   try {
     const response = await fetch(`${config.apiUrl}/api/process-intent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
+      body: JSON.stringify(requestWithMemories),
       signal: controller.signal,
     });
 
@@ -92,27 +96,49 @@ export async function processIntent(
   }
 }
 
+const MEMORIES_KEY = "marina-copilot-memories";
+
+function getLocalMemories(walletAddress: string | null): string[] {
+  if (!walletAddress) return [];
+  try {
+    return JSON.parse(localStorage.getItem(`${MEMORIES_KEY}-${walletAddress}`) || "[]");
+  } catch { return []; }
+}
+
+function saveLocalMemory(walletAddress: string, content: string) {
+  const existing = getLocalMemories(walletAddress);
+  existing.push(content);
+  // Keep last 50 memories
+  const trimmed = existing.slice(-50);
+  localStorage.setItem(`${MEMORIES_KEY}-${walletAddress}`, JSON.stringify(trimmed));
+}
+
 export async function remember(
   walletAddress: string,
   content: MemoryContent,
   memwalCredentials?: { accountId: string; delegateKey: string }
 ): Promise<void> {
-  const { controller, timeoutId } = createTimeoutController();
+  // Always save locally
+  saveLocalMemory(walletAddress, content.content);
 
+  // Also send to backend (MemWal if credentials exist)
+  const { controller, timeoutId } = createTimeoutController();
   try {
-    const response = await fetch(`${config.apiUrl}/api/remember`, {
+    await fetch(`${config.apiUrl}/api/remember`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ walletAddress, content, memwalCredentials }),
       signal: controller.signal,
     });
-
-    await handleResponse<void>(response);
-  } catch (error) {
-    return handleFetchError(error);
+  } catch {
+    // Silent — local already saved
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+export function getMemories(walletAddress: string | null): string[] {
+  return getLocalMemories(walletAddress);
 }
 
 export async function healthCheck(): Promise<{ status: string }> {
