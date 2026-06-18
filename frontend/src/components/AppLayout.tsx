@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCopilotStore } from "@/store/copilot-store";
 import { SpriteCharacter } from "@/components/SpriteCharacter";
 import { ChatContainer } from "@/components/ChatContainer";
@@ -69,10 +70,10 @@ export function AppLayout() {
 
         {/* Bottom links */}
         <div className="flex border-t border-[rgba(0,245,255,0.1)] pt-3 gap-2">
-          <button className="flex-1 flex flex-col items-center gap-1 p-2 rounded-xl text-muted-foreground hover:bg-muted/30 transition-all text-xs">
+          <Link href="/app/settings" className="flex-1 flex flex-col items-center gap-1 p-2 rounded-xl text-muted-foreground hover:bg-muted/30 transition-all text-xs">
             ⚙️
             <span className="font-headline text-[8px] font-bold tracking-widest">SETTINGS</span>
-          </button>
+          </Link>
           <button className="flex-1 flex flex-col items-center gap-1 p-2 rounded-xl text-muted-foreground hover:bg-muted/30 transition-all text-xs">
             📄
             <span className="font-headline text-[8px] font-bold tracking-widest">DOCS</span>
