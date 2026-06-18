@@ -4,6 +4,7 @@ import {
   TokenBalance,
   ProcessIntentResponse,
   MemwalCredentials,
+  OnChainCapsule,
 } from "@/types";
 import { processIntent, remember } from "@/lib/api-client";
 
@@ -11,6 +12,7 @@ interface CopilotStore {
   // Wallet
   walletAddress: string | null;
   balances: TokenBalance[];
+  capsules: OnChainCapsule[];
 
   // Memory
   memwalCredentials: MemwalCredentials | null;
@@ -93,6 +95,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
   // Initial state
   walletAddress: null,
   balances: [],
+  capsules: [],
   memwalCredentials: null,
   messages: [],
   isProcessing: false,

@@ -99,6 +99,16 @@ export interface TransferIntent {
   recipient: string;
 }
 
+export interface OnChainCapsule {
+  id: string;
+  blob_id: string;
+  nonce: number[];
+  unlock_date: string;
+  owner: string;
+  recipient: string;
+  created_at: string;
+}
+
 export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent | CreateCapsuleIntent | UploadFileIntent | TransferIntent;
 
 // --- PTB & Transaction ---

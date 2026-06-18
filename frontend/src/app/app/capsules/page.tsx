@@ -10,13 +10,32 @@ const CAPSULE_PACKAGE = "0x6f0a3c7df312c0d07d1dafbc38e4acbbfedaa6f651aab4efa764a
 
 export default function CapsulesPage() {
   const [view, setView] = useState<"list" | "create">("list");
-  const [capsules, setCapsules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
+  const [now, setNow] = useState(Date.now());
   const walletAddress = useCopilotStore((s) => s.walletAddress);
+  const capsules = useCopilotStore((s) => s.capsules);
+  const toast = useToast();
+  const dAppKit = useDAppKit();
+  const account = useCurrentAccount();
 
-  // Fetch capsules from on-chain
+  // Countdown timer
   useEffect(() => {
-    if (!walletAddress) { setLoading(false); return; }
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch capsules from on-chain (only if store empty)
+  useEffect(() => {
+    if (!walletAddress || capsules.length > 0) return;
+    setLoading(true);
     gqlClient.query({
       query: `{
         objects(filter: { type: "${CAPSULE_PACKAGE}::capsule::Capsule", owner: "${walletAddress}" }, first: 50) {
@@ -25,11 +44,46 @@ export default function CapsulesPage() {
       }` as any,
     } as any).then((res: any) => {
       const nodes = (res.data as any)?.objects?.nodes || [];
-      setCapsules(nodes.map((n: any) => ({ id: n.address, ...n.asMoveObject?.contents?.json })));
+      useCopilotStore.setState({ capsules: nodes.map((n: any) => ({ id: n.address, ...n.asMoveObject?.contents?.json })) });
     }).catch(() => {}).finally(() => setLoading(false));
-  }, [walletAddress]);
+  }, [walletAddress, capsules.length]);
 
-  if (view === "create") return <CreateCapsule onBack={() => setView("list")} />;
+  const handleUnlock = async (capsule: any) => {
+    if (!walletAddress) return;
+    setUnlocking(true);
+    try {
+      const { unlockCapsule } = await import("@/lib/walrus-seal");
+      const { isZkLoginSession } = await import("@/lib/zklogin-signer");
+
+      const signPersonalMessage = async (input: { message: Uint8Array }) => {
+        if (!account && isZkLoginSession()) {
+          const { getStoredZkLoginState } = await import("@/lib/zklogin");
+          const state = await getStoredZkLoginState();
+          if (!state) throw new Error("No zkLogin session");
+          const sig = await state.ephemeralKeyPair.signPersonalMessage(input.message);
+          return { signature: sig.signature };
+        }
+        const res = await (dAppKit as any).signPersonalMessage({ message: input.message });
+        return { signature: res.signature };
+      };
+
+      const content = await unlockCapsule({
+        blobId: capsule.blob_id,
+        idHex: capsule.nonce ? Array.from(capsule.nonce).map((b: any) => b.toString(16).padStart(2, "0")).join("") : "",
+        unlockTimeMs: Number(capsule.unlock_date),
+        userAddress: walletAddress,
+        signPersonalMessage,
+      });
+      setDecryptedContent(content);
+      toast("Capsule decrypted!", "success");
+    } catch (e: any) {
+      toast(e.message || "Failed to unlock", "error");
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
+  if (view === "create") return <CreateCapsule onBack={() => { useCopilotStore.setState({ capsules: [] }); setView("list"); }} />;
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -53,32 +107,49 @@ export default function CapsulesPage() {
         ) : capsules.length === 0 ? (
           <p className="text-center text-muted-foreground text-sm py-8">No capsules yet. Create your first one!</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {capsules.map((c) => {
-              const unlockMs = Number(c.unlock_date);
-              const locked = Date.now() < unlockMs;
-              const remaining = locked ? formatRemaining(unlockMs - Date.now()) : "Ready to open";
+          <>
+            {(() => {
+              const sorted = [...capsules].sort((a, b) => Number(b.created_at) - Number(a.created_at));
+              const locked = sorted.filter((c) => now < Number(c.unlock_date));
+              const unlockable = sorted.filter((c) => now >= Number(c.unlock_date));
               return (
-                <div key={c.id} className="glass-panel rounded-xl p-6">
-                  <div className="flex justify-between items-start mb-4">
+                <>
+                  {unlockable.length > 0 && (
                     <div>
-                      <span className={`text-[10px] uppercase tracking-widest ${locked ? "text-[#63f7ff]/60" : "text-green-400"}`}>
-                        {locked ? "🔒 Locked" : "🔓 Unlockable"}
-                      </span>
-                      <h3 className="font-headline text-sm font-bold mt-1 font-mono">{c.recipient?.slice(0, 8)}...{c.recipient?.slice(-4)}</h3>
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-green-400 mb-3">🔓 Ready to Open ({unlockable.length})</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {unlockable.map((c) => <CapsuleCard key={c.id} capsule={c} now={now} onUnlock={handleUnlock} />)}
+                      </div>
                     </div>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted text-[#63f7ff]">🛡️</div>
-                  </div>
-                  <div className="text-center py-3">
-                    <span className="font-headline text-2xl font-light text-[#63f7ff] tracking-wider">{remaining}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-[rgba(0,245,255,0.1)]">
-                    <span className="text-[10px] text-muted-foreground">Blob: {c.blob_id?.slice(0, 12)}...</span>
-                    <span className="text-[10px] text-muted-foreground">{new Date(Number(c.created_at)).toLocaleDateString()}</span>
-                  </div>
-                </div>
+                  )}
+                  {locked.length > 0 && (
+                    <div>
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-[#63f7ff]/60 mb-3">🔒 Locked ({locked.length})</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {locked.map((c) => <CapsuleCard key={c.id} capsule={c} now={now} onUnlock={handleUnlock} />)}
+                      </div>
+                    </div>
+                  )}
+                </>
               );
-            })}
+            })()}
+          </>
+        )}
+
+        {/* Decrypted content modal */}
+        {decryptedContent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDecryptedContent(null)}>
+            <div className="glass-panel rounded-2xl p-6 max-w-md w-full mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-headline text-lg font-bold text-[#63f7ff]">🔓 Capsule Unlocked</h3>
+              <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg">{decryptedContent}</p>
+              <button onClick={() => setDecryptedContent(null)} className="w-full rounded-xl bg-[#63f7ff] py-2.5 font-bold text-sm text-[#002021]">Close</button>
+            </div>
+          </div>
+        )}
+
+        {unlocking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="animate-pulse text-[#63f7ff]">Decrypting...</div>
           </div>
         )}
       </div>
@@ -86,13 +157,43 @@ export default function CapsulesPage() {
   );
 }
 
+
+function CapsuleCard({ capsule: c, now, onUnlock }: { capsule: any; now: number; onUnlock: (c: any) => void }) {
+  const unlockMs = Number(c.unlock_date);
+  const locked = now < unlockMs;
+  const remaining = locked ? formatRemaining(unlockMs - now) : "Ready to open";
+  return (
+    <div className={`glass-panel rounded-xl p-6 transition-transform ${!locked ? "cursor-pointer hover:scale-[1.02]" : ""}`} onClick={() => !locked && onUnlock(c)}>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <span className={`text-[10px] uppercase tracking-widest ${locked ? "text-[#63f7ff]/60" : "text-green-400"}`}>
+            {locked ? "🔒 Locked" : "🔓 Click to unlock"}
+          </span>
+          <h3 className="font-headline text-sm font-bold mt-1 font-mono">{c.recipient?.slice(0, 8)}...{c.recipient?.slice(-4)}</h3>
+        </div>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted text-[#63f7ff]">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+      </div>
+      <div className="text-center py-3">
+        <span className={`font-headline text-2xl font-light tracking-wider ${locked ? "text-[#63f7ff]" : "text-green-400"}`}>{remaining}</span>
+      </div>
+      <div className="flex justify-between items-center mt-4 pt-3 border-t border-[rgba(0,245,255,0.1)]">
+        <span className="text-[10px] text-muted-foreground">Blob: {c.blob_id?.slice(0, 12)}...</span>
+        <span className="text-[10px] text-muted-foreground">{new Date(Number(c.created_at)).toLocaleDateString()}</span>
+      </div>
+    </div>
+  );
+}
 function formatRemaining(ms: number): string {
   const d = Math.floor(ms / 86400000);
   const h = Math.floor((ms % 86400000) / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+  const s = Math.floor((ms % 60000) / 1000);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
 }
 
 function CreateCapsule({ onBack }: { onBack: () => void }) {

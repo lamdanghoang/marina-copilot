@@ -256,8 +256,9 @@ export async function createCapsule(params: {
     params.onProgress,
   );
 
-  // 3. Create capsule on-chain (metadata)
+  // 3. Create capsule on-chain (metadata) — wait for previous tx to finalize
   params.onProgress?.("Creating capsule on-chain...");
+  await new Promise((r) => setTimeout(r, 2000));
   const { Transaction } = await import("@mysten/sui/transactions");
   const tx = new Transaction();
   const recipient = params.recipient || params.sender;
