@@ -92,7 +92,14 @@ export interface UploadFileIntent {
   action: "upload_file";
 }
 
-export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent | CreateCapsuleIntent | UploadFileIntent;
+export interface TransferIntent {
+  action: "transfer";
+  token: string;
+  amount: number;
+  recipient: string;
+}
+
+export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent | CreateCapsuleIntent | UploadFileIntent | TransferIntent;
 
 // --- PTB & Transaction ---
 

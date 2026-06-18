@@ -663,6 +663,47 @@ export async function compileStake(
 
 // --- Utility Exports for Testing ---
 
+export async function compileTransfer(
+  intent: { token: string; amount: number; recipient: string },
+  sender: string,
+): Promise<PTBCompilerOutput> {
+  const tokenInfo = getTokenBySymbol(intent.token.toUpperCase());
+  if (!tokenInfo) throw new Error(`Unsupported token: ${intent.token}`);
+
+  const rawAmount = toRawAmount(intent.amount, tokenInfo.decimals);
+  const tx = new Transaction();
+  tx.setSender(sender);
+
+  if (tokenInfo.coinType === "0x2::sui::SUI") {
+    const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(rawAmount)]);
+    tx.transferObjects([coin], intent.recipient);
+  } else {
+    const coins = await getSuiClient().getCoins({ owner: sender, coinType: tokenInfo.coinType });
+    const coinObjects = (coins as any)?.data ?? [];
+    if (coinObjects.length === 0) throw new Error(`No ${intent.token} coins found`);
+    const primaryCoin = tx.object(coinObjects[0].coinObjectId);
+    if (coinObjects.length > 1) {
+      tx.mergeCoins(primaryCoin, coinObjects.slice(1).map((c: any) => tx.object(c.coinObjectId)));
+    }
+    const [splitCoin] = tx.splitCoins(primaryCoin, [tx.pure.u64(rawAmount)]);
+    tx.transferObjects([splitCoin], intent.recipient);
+  }
+
+  const txBytes = await tx.build({ client: getSuiClient() as any });
+
+  return {
+    transactionBytes: Buffer.from(txBytes).toString("base64"),
+    metadata: {
+      type: "transfer",
+      steps: [{ index: 1, description: `Send ${intent.amount} ${intent.token} to ${intent.recipient.slice(0, 8)}...${intent.recipient.slice(-4)}`, type: "transfer" }],
+      gasEstimate: 0.005,
+      token: intent.token,
+      amount: intent.amount,
+      recipient: intent.recipient,
+    },
+  };
+}
+
 export {
   toRawAmount,
   fromRawAmount,

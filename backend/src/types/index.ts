@@ -92,18 +92,25 @@ export interface UploadFileIntent {
   action: "upload_file";
 }
 
-export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent | CreateCapsuleIntent | UploadFileIntent;
+export interface TransferIntent {
+  action: "transfer";
+  token: string;
+  amount: number;
+  recipient: string;
+}
+
+export type StructuredIntent = SwapIntent | StakeIntent | QueryIntent | CreateCapsuleIntent | UploadFileIntent | TransferIntent;
 
 // --- PTB & Transaction ---
 
 export interface PTBStep {
   index: number;
   description: string;
-  type: "split" | "swap" | "stake" | "receive";
+  type: "split" | "swap" | "stake" | "receive" | "transfer";
 }
 
 export interface TransactionMetadata {
-  type: "swap" | "stake";
+  type: "swap" | "stake" | "transfer";
   steps: PTBStep[];
   gasEstimate: number;
   // Swap-specific
@@ -115,6 +122,10 @@ export interface TransactionMetadata {
   // Stake-specific
   validatorName?: string;
   estimatedApy?: number;
+  // Transfer-specific
+  token?: string;
+  amount?: number;
+  recipient?: string;
 }
 
 // --- Risk & Guardian ---

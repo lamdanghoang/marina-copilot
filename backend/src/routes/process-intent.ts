@@ -7,7 +7,7 @@
 
 import { Router, Request, Response } from "express";
 import { parseIntent } from "../services/intent-parser";
-import { compileSwap, compileStake } from "../services/ptb-compiler";
+import { compileSwap, compileStake, compileTransfer } from "../services/ptb-compiler";
 import { assessRisks } from "../services/guardian";
 import { recall } from "../services/memory-service";
 import { SuiClient } from "@mysten/sui/client";
@@ -244,6 +244,8 @@ router.post("/", async (req: Request, res: Response) => {
       }
     } else if (intent.action === "stake") {
       compiledResult = await compileStake(intent, walletAddress);
+    } else if (intent.action === "transfer") {
+      compiledResult = await compileTransfer(intent, walletAddress);
     } else {
       const response: ProcessIntentResponse = {
         type: "error",

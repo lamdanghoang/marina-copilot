@@ -66,6 +66,7 @@ export function buildSystemPrompt(): string {
 - **query**: Read-only information request. Required fields: queryType ("balance" or "history"). No transaction needed.
 - **create_capsule**: Create a time-locked encrypted message stored on Walrus. Required fields: content (the secret message), unlockAfterMinutes (how long until decryptable). Optional: recipient.
 - **upload_file**: Upload a file to Walrus decentralized storage. No fields needed (triggers file picker on frontend).
+- **transfer**: Send tokens to another address. Required fields: token (symbol), amount, recipient (Sui address).
 
 ## Supported Tokens
 ${tokenList}
@@ -83,7 +84,7 @@ You MUST return valid JSON matching this exact schema:
 {
   "reasoning": "Brief analysis of the user's request",
   "intent": {
-    "action": "swap" | "stake" | "query" | "create_capsule" | "upload_file",
+    "action": "swap" | "stake" | "query" | "create_capsule" | "upload_file" | "transfer",
     "fromToken": "TOKEN_SYMBOL",
     "toToken": "TOKEN_SYMBOL",
     "amount": <number>,
@@ -113,6 +114,7 @@ You MUST return valid JSON matching this exact schema:
 - For "transaction history", "recent transactions", "what did I do" → use action "query" with queryType "history"
 - For "create capsule", "time capsule", "encrypt a message", "lock this message" → use action "create_capsule" with content and unlockAfterMinutes
 - For "upload file", "store file", "save to walrus" → use action "upload_file"
+- For "send", "transfer", "send X to address" → use action "transfer" with token, amount, recipient
 - For swap intents: set slippageConcern=true if the amount is very large relative to balances
 - For any intent: set concentrationConcern=true if it would make one token >70% of portfolio
 - Use memory context to fill in defaults (e.g. preferred DEX) without asking again
