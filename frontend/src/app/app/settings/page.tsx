@@ -1,42 +1,93 @@
 "use client";
 
 import { useState } from "react";
+import { useDAppKit } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { loadCredentials } from "@/hooks/useMemwalSetup";
 import { networkConfig } from "@/lib/config";
+import { Transaction } from "@mysten/sui/transactions";
+
+const MEMWAL_PACKAGE_ID = "0xcf6ad755a1cdff7217865c796778fabe5aa399cb0cf2eba986f4b582047229c6";
 
 export default function SettingsPage() {
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const memwalCredentials = useCopilotStore((s) => s.memwalCredentials);
-  const [revoking, setRevoking] = useState(false);
+  const dAppKit = useDAppKit();
+  const [loading, setLoading] = useState("");
 
   const creds = walletAddress ? loadCredentials(walletAddress) : null;
   const hasMemwal = !!(memwalCredentials || creds);
+  const accountId = memwalCredentials?.accountId || creds?.accountId;
 
-  const handleRevokeDelegateKey = async () => {
-    if (!walletAddress || !memwalCredentials) return;
-    if (!confirm("Revoke delegate key? Marina will no longer remember your preferences.")) return;
-    setRevoking(true);
+  const signAndExecute = async (tx: Transaction) => {
+    const res = await (dAppKit as any).signAndExecuteTransaction({ transaction: tx });
+    return (res as any)?.Transaction?.digest ?? (res as any)?.digest ?? "";
+  };
+
+  const handleRevoke = async () => {
+    if (!walletAddress || !accountId || !memwalCredentials) return;
+    if (!confirm("Revoke delegate key on-chain? Marina will lose memory access until you set up again.")) return;
+    setLoading("revoke");
     try {
-      // Clear local credentials
+      const { Ed25519Keypair } = await import("@mysten/sui/keypairs/ed25519");
+      const keypair = Ed25519Keypair.fromSecretKey(memwalCredentials.delegateKey);
+      const pubkey = keypair.getPublicKey().toRawBytes();
+
+      const tx = new Transaction();
+      tx.moveCall({
+        target: `${MEMWAL_PACKAGE_ID}::account::remove_delegate_key`,
+        arguments: [tx.object(accountId), tx.pure.vector("u8", Array.from(pubkey))],
+      });
+      await signAndExecute(tx);
       localStorage.removeItem(`marina-copilot-memwal-${walletAddress}`);
       useCopilotStore.getState().setMemwalCredentials(null);
-      alert("Delegate key removed locally. To fully revoke on-chain, call remove_delegate_key from your wallet.");
+      alert("✅ Delegate key revoked on-chain.");
+    } catch (e: any) {
+      alert("❌ Failed: " + (e.message || e));
     } finally {
-      setRevoking(false);
+      setLoading("");
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!accountId) return;
+    if (!confirm("Deactivate account? All delegate keys stop working until reactivated.")) return;
+    setLoading("deactivate");
+    try {
+      const tx = new Transaction();
+      tx.moveCall({ target: `${MEMWAL_PACKAGE_ID}::account::deactivate_account`, arguments: [tx.object(accountId)] });
+      await signAndExecute(tx);
+      alert("✅ Account deactivated.");
+    } catch (e: any) {
+      alert("❌ Failed: " + (e.message || e));
+    } finally {
+      setLoading("");
+    }
+  };
+
+  const handleReactivate = async () => {
+    if (!accountId) return;
+    setLoading("reactivate");
+    try {
+      const tx = new Transaction();
+      tx.moveCall({ target: `${MEMWAL_PACKAGE_ID}::account::reactivate_account`, arguments: [tx.object(accountId)] });
+      await signAndExecute(tx);
+      alert("✅ Account reactivated.");
+    } catch (e: any) {
+      alert("❌ Failed: " + (e.message || e));
+    } finally {
+      setLoading("");
     }
   };
 
   const handleClearMemories = () => {
-    if (!walletAddress) return;
-    if (!confirm("Clear all local memories? AI will forget your history.")) return;
+    if (!walletAddress || !confirm("Clear local memories?")) return;
     localStorage.removeItem(`marina-copilot-memories-${walletAddress}`);
     alert("Local memories cleared.");
   };
 
   const handleClearChat = () => {
-    if (!walletAddress) return;
-    if (!confirm("Clear all chat history?")) return;
+    if (!walletAddress || !confirm("Clear chat history?")) return;
     localStorage.removeItem(`marina-copilot-messages-${walletAddress}`);
     useCopilotStore.getState().clearHistory();
     alert("Chat history cleared.");
@@ -46,53 +97,30 @@ export default function SettingsPage() {
     <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto">
       <h1 className="text-xl font-bold text-white mb-6">Settings</h1>
 
-      {/* Network */}
-      <Section title="Network">
-        <Item label="Current Network" value={networkConfig.network.toUpperCase()} />
-        <Item label="RPC" value={networkConfig.rpcUrl} />
-      </Section>
-
-      {/* Memory (Walrus) */}
-      <Section title="Memory (Walrus/MemWal)">
-        <Item label="Status" value={hasMemwal ? "✅ Active" : "❌ Not configured"} />
+      {/* Account */}
+      <Section title="Account">
+        <Item label="Wallet" value={walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-4)}` : "Not connected"} />
+        <Item label="MemWal" value={hasMemwal ? "✅ Active" : "❌ Not configured"} />
+        {accountId && <Item label="Account ID" value={accountId.slice(0, 16) + "..."} />}
         {hasMemwal && (
           <>
-            <Item label="Account ID" value={memwalCredentials?.accountId?.slice(0, 16) + "..." || "—"} />
-            <Item label="Delegate Key" value="••••••••" />
-            <button
-              onClick={handleRevokeDelegateKey}
-              disabled={revoking}
-              className="mt-2 w-full rounded-md border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-            >
-              {revoking ? "Revoking..." : "Revoke Delegate Key"}
-            </button>
+            <Btn onClick={handleDeactivate} loading={loading === "deactivate"} variant="warning" label="Deactivate Account" desc="Pause all delegate keys (reversible)" />
+            <Btn onClick={handleReactivate} loading={loading === "reactivate"} variant="default" label="Reactivate Account" desc="Resume delegate key access" />
+            <Btn onClick={handleRevoke} loading={loading === "revoke"} variant="danger" label="Revoke Delegate Key" desc="Remove AI memory access (irreversible until re-setup)" />
           </>
         )}
       </Section>
 
-      {/* Data */}
-      <Section title="Data & Privacy">
-        <button
-          onClick={handleClearMemories}
-          className="w-full rounded-md border border-border/30 bg-muted/30 px-4 py-2 text-sm text-white hover:bg-muted/50 text-left"
-        >
-          Clear AI Memories
-          <span className="block text-xs text-gray-400">Remove local action history (swap, transfer, capsule records)</span>
-        </button>
-        <button
-          onClick={handleClearChat}
-          className="mt-2 w-full rounded-md border border-border/30 bg-muted/30 px-4 py-2 text-sm text-white hover:bg-muted/50 text-left"
-        >
-          Clear Chat History
-          <span className="block text-xs text-gray-400">Delete all messages from this browser</span>
-        </button>
+      {/* Network */}
+      <Section title="Network">
+        <Item label="Network" value={networkConfig.network.toUpperCase()} />
+        <Item label="RPC" value={networkConfig.rpcUrl} />
       </Section>
 
-      {/* About */}
-      <Section title="About">
-        <Item label="App" value="Marina Copilot" />
-        <Item label="Track" value="Walrus — Sui Overflow 2026" />
-        <Item label="Wallet" value={walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-4)}` : "Not connected"} />
+      {/* Data & Privacy */}
+      <Section title="Data & Privacy">
+        <Btn onClick={handleClearMemories} label="Clear Local Memories" desc="Remove cached action history from this browser" variant="default" />
+        <Btn onClick={handleClearChat} label="Clear Chat History" desc="Delete all messages from this browser" variant="default" />
       </Section>
     </div>
   );
@@ -102,9 +130,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="mb-6">
       <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">{title}</h2>
-      <div className="rounded-lg border border-border/20 bg-[#0a1a1a] p-4 space-y-2">
-        {children}
-      </div>
+      <div className="rounded-lg border border-border/20 bg-[#0a1a1a] p-4 space-y-3">{children}</div>
     </div>
   );
 }
@@ -113,7 +139,19 @@ function Item({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center py-1">
       <span className="text-sm text-gray-300">{label}</span>
-      <span className="text-sm text-gray-400 font-mono">{value}</span>
+      <span className="text-sm text-gray-400 font-mono truncate ml-4 max-w-[200px]">{value}</span>
     </div>
+  );
+}
+
+function Btn({ onClick, loading, label, desc, variant = "default" }: {
+  onClick: () => void; loading?: boolean; label: string; desc: string; variant?: "default" | "danger" | "warning";
+}) {
+  const c = { default: "border-border/30 bg-muted/30 text-white hover:bg-muted/50", danger: "border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20", warning: "border-yellow-500/50 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20" };
+  return (
+    <button onClick={onClick} disabled={!!loading} className={`w-full rounded-md border px-4 py-2 text-sm text-left disabled:opacity-50 ${c[variant]}`}>
+      {loading ? "Processing..." : label}
+      <span className="block text-xs text-gray-500">{desc}</span>
+    </button>
   );
 }
