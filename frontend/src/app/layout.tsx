@@ -8,6 +8,7 @@ import { ToastProvider } from "@/components/Toast";
 export const metadata: Metadata = {
   title: "Marina Copilot",
   description: "AI-powered DeFi assistant on Sui blockchain",
+  icons: { icon: "/favicon.png" },
 };
 
 export default function RootLayout({

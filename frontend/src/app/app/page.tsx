@@ -46,7 +46,7 @@ function ConnectOverlay() {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="glass-panel w-full max-w-sm rounded-2xl p-8 shadow-[0_0_60px_rgba(99,247,255,0.1)]">
         <div className="text-center mb-6">
-          <span className="text-3xl">🤖</span>
+          <img src="/marina-logo.png" alt="Marina" className="w-16 h-16 rounded-full mx-auto" />
           <h2 className="font-headline text-xl font-bold mt-3">Connect to Marina</h2>
           <p className="text-xs text-muted-foreground mt-2">Choose your preferred login method</p>
         </div>
