@@ -38,9 +38,13 @@ export function useActionExecution() {
       return;
     }
 
-    const signAndExecute = async (args: { transaction: any }) => {
-      return (dAppKit as any).signAndExecuteTransaction({ transaction: args.transaction });
-    };
+    let signAndExecute: (args: { transaction: any }) => Promise<any>;
+    if (account) {
+      signAndExecute = async (args) => (dAppKit as any).signAndExecuteTransaction({ transaction: args.transaction });
+    } else {
+      const { signAndExecuteZkLogin } = await import("@/lib/zklogin-signer");
+      signAndExecute = signAndExecuteZkLogin;
+    }
 
     if (action === "create_capsule") {
       await executeCapsuleAction(params, sender, signAndExecute);

@@ -113,15 +113,20 @@ function CreateCapsule({ onBack }: { onBack: () => void }) {
     setIsCreating(true);
     try {
       const { createCapsule } = await import("@/lib/walrus-seal");
+      const { isZkLoginSession, signAndExecuteZkLogin } = await import("@/lib/zklogin-signer");
       const unlockDate = new Date(unlockTime);
       const unlockAfterMinutes = Math.max(1, Math.round((unlockDate.getTime() - Date.now()) / 60000));
+
+      const signAndExecute = account
+        ? async (args: { transaction: any }) => (dAppKit as any).signAndExecuteTransaction({ transaction: args.transaction })
+        : signAndExecuteZkLogin;
 
       const capsule = await createCapsule({
         content,
         unlockAfterMinutes,
         recipient: recipient || sender,
         sender,
-        signAndExecute: async (args) => (dAppKit as any).signAndExecuteTransaction({ transaction: args.transaction }),
+        signAndExecute,
         onProgress: (step) => setStatus(step),
       });
 
