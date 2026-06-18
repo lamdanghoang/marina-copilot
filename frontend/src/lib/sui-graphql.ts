@@ -14,10 +14,9 @@ export const gqlClient = new SuiGraphQLClient({
 });
 
 /**
- * Find MemWalAccount objectId by owner wallet address.
- * Paginates shared objects until owner matches.
+ * Find MemWalAccount objectId and active status by owner wallet address.
  */
-export async function findMemwalAccount(packageId: string, ownerAddress: string): Promise<string | null> {
+export async function findMemwalAccount(packageId: string, ownerAddress: string): Promise<{ accountId: string; active: boolean } | null> {
   let cursor: string | null = null;
 
   for (let page = 0; page < 10; page++) {
@@ -38,7 +37,8 @@ export async function findMemwalAccount(packageId: string, ownerAddress: string)
     const data = result.data as any;
     const nodes = data?.objects?.nodes || [];
     for (const node of nodes) {
-      if (node.asMoveObject?.contents?.json?.owner === ownerAddress) return node.address;
+      const json = node.asMoveObject?.contents?.json;
+      if (json?.owner === ownerAddress) return { accountId: node.address, active: json.active };
     }
     if (!data?.objects?.pageInfo?.hasNextPage) break;
     cursor = data.objects.pageInfo.endCursor;

@@ -54,7 +54,8 @@ export function useMemwalSetup(walletAddress: string | null) {
       // Check if account already exists via GraphQL
       let accountId: string | null = null;
       try {
-        accountId = await findMemwalAccount(MEMWAL_PACKAGE_ID, walletAddress);
+        const found = await findMemwalAccount(MEMWAL_PACKAGE_ID, walletAddress);
+        if (found) accountId = found.accountId;
       } catch (e) {
         console.warn("[MemWal] GraphQL query failed:", e);
       }

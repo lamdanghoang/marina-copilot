@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDAppKit } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { loadCredentials } from "@/hooks/useMemwalSetup";
 import { networkConfig } from "@/lib/config";
+import { findMemwalAccount } from "@/lib/sui-graphql";
+import { useToast } from "@/components/Toast";
 import { Transaction } from "@mysten/sui/transactions";
 
 const MEMWAL_PACKAGE_ID = "0xcf6ad755a1cdff7217865c796778fabe5aa399cb0cf2eba986f4b582047229c6";
@@ -13,11 +15,21 @@ export default function SettingsPage() {
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const memwalCredentials = useCopilotStore((s) => s.memwalCredentials);
   const dAppKit = useDAppKit();
+  const toast = useToast();
   const [loading, setLoading] = useState("");
+  const [accountActive, setAccountActive] = useState<boolean | null>(null);
 
   const creds = walletAddress ? loadCredentials(walletAddress) : null;
   const hasMemwal = !!(memwalCredentials || creds);
   const accountId = memwalCredentials?.accountId || creds?.accountId;
+
+  // Query on-chain active status
+  useEffect(() => {
+    if (!walletAddress) return;
+    findMemwalAccount(MEMWAL_PACKAGE_ID, walletAddress)
+      .then((res) => setAccountActive(res?.active ?? null))
+      .catch(() => setAccountActive(null));
+  }, [walletAddress]);
 
   const signAndExecute = async (tx: Transaction) => {
     const res = await (dAppKit as any).signAndExecuteTransaction({ transaction: tx });
@@ -41,9 +53,9 @@ export default function SettingsPage() {
       await signAndExecute(tx);
       localStorage.removeItem(`marina-copilot-memwal-${walletAddress}`);
       useCopilotStore.getState().setMemwalCredentials(null);
-      alert("✅ Delegate key revoked on-chain.");
+      toast("Delegate key revoked on-chain.", "success");
     } catch (e: any) {
-      alert("❌ Failed: " + (e.message || e));
+      toast("Failed: " + (e.message || e), "error");
     } finally {
       setLoading("");
     }
@@ -57,9 +69,10 @@ export default function SettingsPage() {
       const tx = new Transaction();
       tx.moveCall({ target: `${MEMWAL_PACKAGE_ID}::account::deactivate_account`, arguments: [tx.object(accountId)] });
       await signAndExecute(tx);
-      alert("✅ Account deactivated.");
+      setAccountActive(false);
+      toast("Account deactivated.", "success");
     } catch (e: any) {
-      alert("❌ Failed: " + (e.message || e));
+      toast("Failed: " + (e.message || e), "error");
     } finally {
       setLoading("");
     }
@@ -72,9 +85,10 @@ export default function SettingsPage() {
       const tx = new Transaction();
       tx.moveCall({ target: `${MEMWAL_PACKAGE_ID}::account::reactivate_account`, arguments: [tx.object(accountId)] });
       await signAndExecute(tx);
-      alert("✅ Account reactivated.");
+      setAccountActive(true);
+      toast("Account reactivated.", "success");
     } catch (e: any) {
-      alert("❌ Failed: " + (e.message || e));
+      toast("Failed: " + (e.message || e), "error");
     } finally {
       setLoading("");
     }
@@ -83,14 +97,14 @@ export default function SettingsPage() {
   const handleClearMemories = () => {
     if (!walletAddress || !confirm("Clear local memories?")) return;
     localStorage.removeItem(`marina-copilot-memories-${walletAddress}`);
-    alert("Local memories cleared.");
+    toast("Local memories cleared.", "success");
   };
 
   const handleClearChat = () => {
     if (!walletAddress || !confirm("Clear chat history?")) return;
     localStorage.removeItem(`marina-copilot-messages-${walletAddress}`);
     useCopilotStore.getState().clearHistory();
-    alert("Chat history cleared.");
+    toast("Chat history cleared.", "success");
   };
 
   return (
@@ -102,10 +116,15 @@ export default function SettingsPage() {
         <Item label="Wallet" value={walletAddress ? `${walletAddress.slice(0, 8)}...${walletAddress.slice(-4)}` : "Not connected"} />
         <Item label="MemWal" value={hasMemwal ? "✅ Active" : "❌ Not configured"} />
         {accountId && <Item label="Account ID" value={accountId.slice(0, 16) + "..."} />}
+        {accountActive !== null && <Item label="On-Chain Status" value={accountActive ? "🟢 Active" : "🔴 Deactivated"} />}
         {hasMemwal && (
           <>
-            <Btn onClick={handleDeactivate} loading={loading === "deactivate"} variant="warning" label="Deactivate Account" desc="Pause all delegate keys (reversible)" />
-            <Btn onClick={handleReactivate} loading={loading === "reactivate"} variant="default" label="Reactivate Account" desc="Resume delegate key access" />
+            {accountActive === true && (
+              <Btn onClick={handleDeactivate} loading={loading === "deactivate"} variant="warning" label="Deactivate Account" desc="Pause all delegate keys (reversible)" />
+            )}
+            {accountActive === false && (
+              <Btn onClick={handleReactivate} loading={loading === "reactivate"} variant="default" label="Reactivate Account" desc="Resume delegate key access" />
+            )}
             <Btn onClick={handleRevoke} loading={loading === "revoke"} variant="danger" label="Revoke Delegate Key" desc="Remove AI memory access (irreversible until re-setup)" />
           </>
         )}
