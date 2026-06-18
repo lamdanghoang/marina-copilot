@@ -43,9 +43,11 @@ export interface CapsuleData {
 
 export interface UploadedFile {
   blobId: string;
+  blobObjectId?: string;
   name: string;
   size: number;
   uploadDate: number;
+  epochs: number;
 }
 
 // === Clients ===
@@ -99,7 +101,7 @@ export async function walrusUpload(
   sender: string,
   signAndExecute: SignAndExecute,
   onProgress?: (step: string) => void,
-): Promise<string> {
+): Promise<{ blobId: string; blobObjectId?: string }> {
   const client = createWalrusClient();
 
   onProgress?.("Encoding blob...");
@@ -136,9 +138,14 @@ export async function walrusUpload(
   onProgress?.("Certifying blob (sign tx)...");
   const certifyTx = flow.certify();
   certifyTx.setSender(sender);
-  await signAndExecute({ transaction: certifyTx });
+  const certifyResult = await signAndExecute({ transaction: certifyTx });
 
-  return encoded.blobId;
+  // Try to extract blob object ID from register result (created objects)
+  const blobObjectId = (registerResult as any)?.effects?.created?.[0]?.reference?.objectId
+    ?? (registerResult as any)?.Transaction?.effects?.created?.[0]?.objectId
+    ?? undefined;
+
+  return { blobId: encoded.blobId, blobObjectId };
 }
 
 // === #2: Seal Encrypt (Time-Lock) ===
@@ -247,7 +254,7 @@ export async function createCapsule(params: {
   const { encryptedData, nonce, idHex } = await sealEncrypt(params.content, unlockTimeMs, params.recipient || params.sender);
 
   // 2. Upload encrypted blob to Walrus (user signs 2 txs)
-  const blobId = await walrusUpload(
+  const { blobId } = await walrusUpload(
     encryptedData,
     params.sender,
     params.signAndExecute,
@@ -293,8 +300,41 @@ export async function uploadFileToWalrus(params: {
   onProgress?: (step: string) => void;
 }): Promise<UploadedFile> {
   const data = new Uint8Array(await params.file.arrayBuffer());
-  const blobId = await walrusUpload(data, params.sender, params.signAndExecute, params.onProgress);
-  return { blobId, name: params.file.name, size: params.file.size, uploadDate: Date.now() };
+  const { blobId, blobObjectId } = await walrusUpload(data, params.sender, params.signAndExecute, params.onProgress);
+  return { blobId, blobObjectId, name: params.file.name, size: params.file.size, uploadDate: Date.now(), epochs: 3 };
+}
+
+// === High-Level: Extend Blob Storage ===
+
+const WALRUS_SYSTEM_OBJECT = "0x6c2547cbbc38025cf3adac45f63cb0a8d12ecf777cdc75a4971612bf97fdf6af";
+
+export async function extendBlobStorage(params: {
+  blobObjectId: string;
+  extendEpochs: number;
+  sender: string;
+  signAndExecute: SignAndExecute;
+}): Promise<void> {
+  const { Transaction } = await import("@mysten/sui/transactions");
+  const tx = new Transaction();
+
+  // Need WAL payment — split from gas (auto-swap handled by caller if needed)
+  const [walCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(BigInt(100_000_000))]); // 0.1 WAL estimate
+  const walPayment = tx.moveCall({
+    target: `${networkConfig.walExchangePackage}::wal_exchange::exchange_all_for_wal`,
+    arguments: [tx.object(networkConfig.walExchangeId), walCoin],
+  });
+
+  tx.moveCall({
+    target: `0x7e12d67a52106ddd5f26c6ff4fe740ba5dea7cfc138d5b1d33863ba9098aa6fe::system::extend_blob`,
+    arguments: [
+      tx.object(WALRUS_SYSTEM_OBJECT),
+      tx.object(params.blobObjectId),
+      tx.pure.u32(params.extendEpochs),
+      walPayment,
+    ],
+  });
+
+  await params.signAndExecute({ transaction: tx });
 }
 
 // === High-Level: Unlock Capsule ===
