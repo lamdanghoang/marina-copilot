@@ -195,6 +195,10 @@ export function useMemwalSetup(walletAddress: string | null) {
       setCredentials(creds);
       setHasAccount(true);
 
+      // Update global store so banner hides
+      const { useCopilotStore } = await import("@/store/copilot-store");
+      useCopilotStore.getState().setMemwalCredentials(creds);
+
       return creds;
     } catch (error) {
       console.error("[MemWal Setup] Failed:", error);
