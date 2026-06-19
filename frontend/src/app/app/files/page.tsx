@@ -5,6 +5,7 @@ import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useToast } from "@/components/Toast";
 import { loadFiles } from "@/hooks/useActionExecution";
+import { HardDrive, Image, FileText, Table, Film, Music, Archive, Code, File } from "lucide-react";
 import type { UploadedFile } from "@/lib/walrus-seal";
 
 export default function FilesPage() {
@@ -144,7 +145,7 @@ export default function FilesPage() {
         </div>
 
         <div className="glass-panel rounded-xl p-4 flex gap-3">
-          <span>🐘</span>
+          <HardDrive size={18} className="text-[#63f7ff] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-bold">Powered by Walrus</p>
             <p className="text-[10px] text-muted-foreground mt-1">
@@ -157,15 +158,15 @@ export default function FilesPage() {
   );
 }
 
-function getFileIcon(name: string): string {
+function getFileIcon(name: string): React.ReactNode {
   const ext = name.split(".").pop()?.toLowerCase() || "";
-  if (["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext)) return "🖼️";
-  if (["pdf"].includes(ext)) return "📕";
-  if (["doc", "docx", "txt", "md"].includes(ext)) return "📝";
-  if (["xls", "xlsx", "csv"].includes(ext)) return "📊";
-  if (["mp4", "mov", "avi", "webm"].includes(ext)) return "🎬";
-  if (["mp3", "wav", "ogg"].includes(ext)) return "🎵";
-  if (["zip", "rar", "tar", "gz"].includes(ext)) return "📦";
-  if (["json", "js", "ts", "py", "rs"].includes(ext)) return "💻";
-  return "📄";
+  const cls = "text-[#63f7ff]";
+  if (["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext)) return <Image size={20} className={cls} />;
+  if (["pdf", "doc", "docx", "txt", "md"].includes(ext)) return <FileText size={20} className={cls} />;
+  if (["xls", "xlsx", "csv"].includes(ext)) return <Table size={20} className={cls} />;
+  if (["mp4", "mov", "avi", "webm"].includes(ext)) return <Film size={20} className={cls} />;
+  if (["mp3", "wav", "ogg"].includes(ext)) return <Music size={20} className={cls} />;
+  if (["zip", "rar", "tar", "gz"].includes(ext)) return <Archive size={20} className={cls} />;
+  if (["json", "js", "ts", "py", "rs"].includes(ext)) return <Code size={20} className={cls} />;
+  return <File size={20} className={cls} />;
 }

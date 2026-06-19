@@ -5,6 +5,7 @@ import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useToast } from "@/components/Toast";
 import { gqlClient } from "@/lib/sui-graphql";
+import { Lock, Unlock, Clock, ShieldCheck } from "lucide-react";
 
 const CAPSULE_PACKAGE = "0x6f0a3c7df312c0d07d1dafbc38e4acbbfedaa6f651aab4efa764a91221b1cb53";
 
@@ -102,7 +103,7 @@ export default function CapsulesPage() {
                 <>
                   {unlockable.length > 0 && (
                     <div>
-                      <h2 className="text-xs font-bold uppercase tracking-widest text-green-400 mb-3">🔓 Ready to Open ({unlockable.length})</h2>
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-green-400 mb-3"><Unlock size={12} className="inline" /> Ready to Open ({unlockable.length})</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {unlockable.map((c) => <CapsuleCard key={c.id} capsule={c} now={now} onUnlock={handleUnlock} />)}
                       </div>
@@ -110,7 +111,7 @@ export default function CapsulesPage() {
                   )}
                   {locked.length > 0 && (
                     <div>
-                      <h2 className="text-xs font-bold uppercase tracking-widest text-[#63f7ff]/60 mb-3">🔒 Locked ({locked.length})</h2>
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-[#63f7ff]/60 mb-3"><Lock size={12} className="inline" /> Locked ({locked.length})</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {locked.map((c) => <CapsuleCard key={c.id} capsule={c} now={now} onUnlock={handleUnlock} />)}
                       </div>
@@ -126,7 +127,7 @@ export default function CapsulesPage() {
         {decryptedContent && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDecryptedContent(null)}>
             <div className="glass-panel rounded-2xl p-6 max-w-md w-full mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-headline text-lg font-bold text-[#63f7ff]">🔓 Capsule Unlocked</h3>
+              <h3 className="font-headline text-lg font-bold text-[#63f7ff]"><Unlock size={16} className="inline" /> Capsule Unlocked</h3>
               <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg">{decryptedContent}</p>
               <button onClick={() => setDecryptedContent(null)} className="w-full rounded-xl bg-[#63f7ff] py-2.5 font-bold text-sm text-[#002021]">Close</button>
             </div>
@@ -152,13 +153,13 @@ function CapsuleCard({ capsule: c, now, onUnlock }: { capsule: any; now: number;
     <div className={`glass-panel rounded-xl p-6 transition-transform ${!locked ? "cursor-pointer hover:scale-[1.02]" : ""}`} onClick={() => !locked && onUnlock(c)}>
       <div className="flex justify-between items-start mb-4">
         <div>
-          <span className={`text-[10px] uppercase tracking-widest ${locked ? "text-[#63f7ff]/60" : "text-green-400"}`}>
-            {locked ? "⏳ Waiting" : "🔓 Click to unlock"}
+          <span className={`text-[10px] uppercase tracking-widest flex items-center gap-1 ${locked ? "text-[#63f7ff]/60" : "text-green-400"}`}>
+            {locked ? <><Clock size={10} /> Waiting</> : <><Unlock size={10} /> Click to unlock</>}
           </span>
           <h3 className="font-headline text-sm font-bold mt-1 font-mono">From: {c.owner?.slice(0, 8)}...{c.owner?.slice(-4)}</h3>
         </div>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted text-[#63f7ff]">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <ShieldCheck size={20} />
         </div>
       </div>
       <div className="text-center py-3">
@@ -271,7 +272,7 @@ function CreateCapsule({ onBack }: { onBack: () => void }) {
 
           {/* Info */}
           <div className="flex gap-3 p-4 rounded-xl bg-muted/20 border border-[rgba(0,245,255,0.1)]">
-            <span>🔒</span>
+            <Lock size={16} className="text-[#63f7ff]" />
             <div>
               <p className="text-xs font-bold">Time-Lock Encryption</p>
               <p className="text-[10px] text-muted-foreground mt-1">

@@ -2,6 +2,7 @@
 
 import { useCopilotStore } from "@/store/copilot-store";
 import { useMemwalSetup } from "@/hooks/useMemwalSetup";
+import { Brain } from "lucide-react";
 
 /**
  * Shows memory setup prompt. Only renders if:
@@ -20,7 +21,7 @@ export function MemorySetup() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-2">
       <div className="flex items-center gap-3 rounded-lg border border-border/30 bg-muted/50 px-4 py-3">
-        <span className="text-lg">🧠</span>
+        <span className="text-lg"><Brain size={20} className="text-[#63f7ff]" /></span>
         <div className="flex-1 text-sm">
           <p className="font-medium">Enable Persistent Memory</p>
           <p className="text-muted-foreground text-xs">

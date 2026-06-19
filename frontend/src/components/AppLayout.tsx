@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Settings, FileText, Brain } from "lucide-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { SpriteCharacter } from "@/components/SpriteCharacter";
 import { ChatContainer } from "@/components/ChatContainer";
@@ -40,7 +41,7 @@ export function AppLayout() {
         <div className="flex-1 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h3 className="font-headline text-[10px] text-muted-foreground tracking-widest font-bold flex items-center gap-1.5">
-              ⚙️ MEMORY
+              <Brain size={12} className="inline mr-1" /> MEMORY
             </h3>
             <button
               onClick={() => useCopilotStore.getState().clearHistory()}
@@ -78,11 +79,11 @@ export function AppLayout() {
         {/* Bottom links */}
         <div className="flex border-t border-[rgba(0,245,255,0.1)] pt-3 gap-2">
           <Link href="/app/settings" className="flex-1 flex flex-col items-center gap-1 p-2 rounded-xl text-muted-foreground hover:bg-muted/30 transition-all text-xs">
-            ⚙️
+            <Settings size={16} />
             <span className="font-headline text-[8px] font-bold tracking-widest">SETTINGS</span>
           </Link>
           <button className="flex-1 flex flex-col items-center gap-1 p-2 rounded-xl text-muted-foreground hover:bg-muted/30 transition-all text-xs">
-            📄
+            <FileText size={16} />
             <span className="font-headline text-[8px] font-bold tracking-widest">DOCS</span>
           </button>
         </div>
