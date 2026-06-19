@@ -21,6 +21,7 @@ function useCharacterAnimation(): string {
 export function AppLayout() {
   const animation = useCharacterAnimation();
   const balances = useCopilotStore((s) => s.balances);
+  const walletAddress = useCopilotStore((s) => s.walletAddress);
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
@@ -49,21 +50,27 @@ export function AppLayout() {
             </button>
           </div>
 
-          {/* Memory tags placeholder */}
+          {/* Memory tags — show real memories from localStorage */}
           <div className="flex flex-wrap gap-1.5">
-            <span className="bg-[#63f7ff]/5 border border-[#63f7ff]/20 px-2.5 py-1 rounded-full text-xs text-[#63f7ff]">
-              💡 Cetus Priority
-            </span>
-            <span className="bg-[#63f7ff]/5 border border-[#63f7ff]/20 px-2.5 py-1 rounded-full text-xs text-[#63f7ff]">
-              🛡️ Risk: Moderate
-            </span>
+            {(() => {
+              const memories = typeof window !== "undefined" 
+                ? JSON.parse(localStorage.getItem(`marina-copilot-memories-${walletAddress}`) || "[]").slice(-3)
+                : [];
+              return memories.length > 0 
+                ? memories.map((m: string, i: number) => (
+                    <span key={i} className="bg-[#63f7ff]/5 border border-[#63f7ff]/20 px-2.5 py-1 rounded-full text-xs text-[#63f7ff] truncate max-w-[200px]">
+                      {m.slice(0, 30)}
+                    </span>
+                  ))
+                : <span className="text-xs text-muted-foreground italic">No memories yet</span>;
+            })()}
           </div>
 
           {/* AI Context */}
           <div className="mt-auto p-3.5 glass-panel rounded-xl">
             <p className="font-headline text-[9px] text-muted-foreground font-bold mb-1">AI CONTEXT</p>
             <p className="text-xs text-foreground/80 leading-relaxed italic">
-              &quot;Saved 1% slippage config for SUI swaps to ensure safe execution.&quot;
+              &quot;Memories persist on Walrus via MemWal. Your data, your keys.&quot;
             </p>
           </div>
         </div>
@@ -126,9 +133,9 @@ export function AppLayout() {
 
         {/* Marina Insight */}
         <div className="mt-auto glass-panel rounded-xl p-4 border-[#63f7ff]/20">
-          <p className="font-headline text-[9px] text-[#63f7ff] font-bold tracking-widest mb-2">MARINA INSIGHT</p>
+          <p className="font-headline text-[9px] text-[#63f7ff] font-bold tracking-widest mb-2">TRY ASKING</p>
           <p className="text-xs text-foreground/80 leading-relaxed">
-            Connect your wallet and ask Marina to analyze your portfolio for optimization suggestions.
+            &quot;Create a capsule for tomorrow&quot;, &quot;Upload a file&quot;, &quot;Send 1 SUI to 0x...&quot;, or &quot;What&apos;s my balance?&quot;
           </p>
         </div>
       </aside>

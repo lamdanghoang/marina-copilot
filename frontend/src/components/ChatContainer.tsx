@@ -5,6 +5,7 @@ import { useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useTransactionExecution } from "@/hooks/useTransactionExecution";
 import { useActionExecution } from "@/hooks/useActionExecution";
+import { useCapsuleNotifications } from "@/hooks/useCapsuleNotifications";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { PTBPreview } from "@/components/PTBPreview";
@@ -22,6 +23,7 @@ export function ChatContainer() {
   const pendingAction = useCopilotStore((s) => s.pendingAction);
   const account = useCurrentAccount();
   const { executeTransaction } = useTransactionExecution();
+  useCapsuleNotifications();
   const { executeAction } = useActionExecution();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -103,7 +105,7 @@ function WelcomeMessage() {
       </span>
       <div className="glass-panel rounded-xl rounded-tl-none border border-border/10 p-4 shadow-[0_40px_40px_-20px_rgba(143,245,255,0.05)]">
         <p className="text-sm leading-relaxed">
-          👋 Hello! I&apos;m your Marina Copilot on Sui. I can help you swap tokens, stake SUI, and check your portfolio. Just tell me what you&apos;d like to do.
+          👋 Hello! I&apos;m Marina, your AI copilot on Sui. I can create encrypted capsules, upload files to Walrus, swap tokens, and remember your preferences across sessions. What would you like to do?
         </p>
       </div>
     </div>

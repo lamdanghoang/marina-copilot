@@ -166,6 +166,7 @@ export interface ProcessIntentRequest {
     accountId: string;
     delegateKey: string;
   };
+  contacts?: Array<{ name: string; address: string }>;
 }
 
 export interface ProcessIntentResponse {

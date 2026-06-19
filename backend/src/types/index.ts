@@ -215,6 +215,7 @@ export interface IntentParserInput {
   memories: MemoryRecord[];
   balances: TokenBalance[];
   conversationHistory: ChatMessage[];
+  contacts?: Array<{ name: string; address: string }>;
 }
 
 export interface IntentParserOutput {

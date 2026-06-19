@@ -171,6 +171,7 @@ router.post("/", async (req: Request, res: Response) => {
       memories,
       balances: balances || [],
       conversationHistory: conversationHistory || [],
+      contacts: req.body.contacts || [],
     });
 
     // --- Step 3: If clarification needed → return early ---

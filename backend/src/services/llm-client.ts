@@ -115,6 +115,8 @@ You MUST return valid JSON matching this exact schema:
 - For "create capsule", "time capsule", "encrypt a message", "lock this message" → use action "create_capsule" with content and unlockAfterMinutes
 - For "upload file", "store file", "save to walrus" → use action "upload_file"
 - For "send", "transfer", "send X to address" → use action "transfer" with token, amount, recipient
+- For knowledge questions about Sui, Walrus, Seal, zkLogin, Move, or blockchain concepts → set intent=null and provide a helpful explanation in the clarification field. You are knowledgeable about the Sui ecosystem.
+- If the user mentions a contact name (not an address), check memory for known contacts and resolve to address
 - For swap intents: set slippageConcern=true if the amount is very large relative to balances
 - For any intent: set concentrationConcern=true if it would make one token >70% of portfolio
 - Use memory context to fill in defaults (e.g. preferred DEX) without asking again
@@ -128,6 +130,9 @@ export function buildLLMContext(input: IntentParserInput): LLMContext {
 
   const memories = formatMemories(input.memories);
   const balances = formatBalances(input.balances);
+  const contactsContext = (input.contacts || []).map((c) => `[Contact] ${c.name} = ${c.address}`);
+
+  const combinedMemories = [...memories, ...contactsContext];
 
   const conversationHistory = input.conversationHistory
     .slice(-6) // Keep last 3 exchanges (6 messages)
@@ -139,7 +144,7 @@ export function buildLLMContext(input: IntentParserInput): LLMContext {
   return {
     systemPrompt,
     userMessage: input.message,
-    memories,
+    memories: combinedMemories,
     balances,
     conversationHistory,
   };

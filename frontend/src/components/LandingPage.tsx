@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SpriteCharacter } from "@/components/SpriteCharacter";
+import { Lock, Brain, HardDrive, MessageSquare, Shield, Key } from "lucide-react";
 
 export function LandingPage() {
   const router = useRouter();
@@ -24,15 +25,14 @@ export function LandingPage() {
       <section className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="flex flex-col gap-6">
           <p className="font-headline text-xs font-bold tracking-[0.25em] text-[#63f7ff]">
-            NEXT-GENERATION AI ASSISTANT
+            AI-POWERED WALRUS ASSISTANT
           </p>
           <h1 className="font-headline text-4xl sm:text-6xl font-bold tracking-tight leading-tight">
-            Intelligent DeFi AI{" "}
-            <span className="text-[#63f7ff]">Copilot on Sui</span>
+            AI Copilot with{" "}
+            <span className="text-[#63f7ff]">Persistent Memory</span>
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed font-light">
-            Execute complex transactions through natural language. Marina understands your intent,
-            optimizes yield, and protects your assets with advanced Guardian technology.
+            Encrypted time capsules, decentralized file storage, and cross-session AI memory — all powered by Walrus and owned by you.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -45,13 +45,11 @@ export function LandingPage() {
             </button>
           </div>
 
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex -space-x-3">
-              <div className="w-9 h-9 rounded-full border-2 border-background bg-muted" />
-              <div className="w-9 h-9 rounded-full border-2 border-background bg-muted" />
-              <div className="w-9 h-9 rounded-full border-2 border-background bg-[#2e3637] flex items-center justify-center text-[10px] font-bold text-[#63f7ff]">+10k</div>
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#63f7ff]/20 bg-[#63f7ff]/5">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-xs text-muted-foreground">Live on Sui Testnet</span>
             </div>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Users trust Marina</p>
           </div>
         </div>
 
@@ -69,7 +67,7 @@ export function LandingPage() {
               <span className="font-headline text-[9px] text-[#63f7ff] uppercase font-bold tracking-widest">MARINA THINKING</span>
             </div>
             <p className="text-xs leading-snug">
-              &quot;I have found the highest yield strategy on Cetus for you.&quot;
+              &quot;Your capsule is encrypted and stored on Walrus. It unlocks in 2 hours.&quot;
             </p>
           </div>
         </div>
@@ -79,30 +77,54 @@ export function LandingPage() {
       <section className="max-w-7xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
           <p className="font-headline text-xs text-[#63f7ff] tracking-[0.25em] font-bold uppercase mb-3">Core Features</p>
-          <h3 className="font-headline text-3xl font-semibold">The Smart DeFi Platform</h3>
+          <h3 className="font-headline text-3xl font-semibold">Powered by Walrus Ecosystem</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <FeatureCard
-            icon="🧠"
-            title="Intent Engine"
-            description='No technical expertise needed. Just say "Swap 10 SUI to USDC at the best rate" and Marina handles the rest.'
-            tag="SUI INTENT LAYER"
+            icon={<Lock size={28} />}
+            title="Time Capsules"
+            description="Encrypt messages with Seal threshold encryption, store on Walrus. Only the recipient can decrypt after the time-lock expires."
+            tag="SEAL + WALRUS"
             tagColor="text-[#63f7ff]/60"
           />
           <FeatureCard
-            icon="🛡️"
-            title="Guardian Protection"
-            description="Every transaction is scanned by Guardian risk assessment. Marina alerts you to slippage and concentration risks."
-            tag="SAFETY SCORE: AAA"
-            tagColor="text-green-500/60"
+            icon={<Brain size={28} />}
+            title="AI Memory"
+            description="Marina remembers your preferences across sessions via Walrus MemWal. User-owned on-chain accounts with revocable delegate keys."
+            tag="PERSISTENT MEMORY"
+            tagColor="text-purple-400/60"
           />
           <FeatureCard
-            icon="🐘"
-            title="Walrus Memory"
-            description="Marina remembers your preferences in a decentralized Walrus storage that you fully own and control with on-chain keys."
-            tag="DECENTRALIZED STORAGE"
-            tagColor="text-purple-400/60"
+            icon={<HardDrive size={28} />}
+            title="Decentralized Storage"
+            description="Upload files to Walrus with erasure coding. Extend storage epochs on-chain. Download anytime from decentralized nodes."
+            tag="WALRUS SDK"
+            tagColor="text-green-500/60"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          <FeatureCard
+            icon={<MessageSquare size={28} />}
+            title="Natural Language DeFi"
+            description='Say "Swap 10 SUI to USDC" or "Send 5 SUI to 0x..." — Marina compiles PTBs, shows preview, and executes after your confirmation.'
+            tag="INTENT ENGINE"
+            tagColor="text-[#63f7ff]/60"
+          />
+          <FeatureCard
+            icon={<Shield size={28} />}
+            title="Guardian Protection"
+            description="Every transaction scanned for slippage and concentration risks before execution. Nothing runs without your explicit approval."
+            tag="RISK ASSESSMENT"
+            tagColor="text-yellow-400/60"
+          />
+          <FeatureCard
+            icon={<Key size={28} />}
+            title="Dual Authentication"
+            description="Connect with wallet extension (Slush) or sign in with Google via zkLogin. No seed phrase needed for Web2 users."
+            tag="WALLET + ZKLOGIN"
+            tagColor="text-cyan-400/60"
           />
         </div>
       </section>
@@ -111,10 +133,10 @@ export function LandingPage() {
       <section className="max-w-7xl mx-auto px-6 py-8">
         <div className="glass-panel rounded-[2rem] p-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <Stat value="< 5s" label="Response Time" />
-            <Stat value="99.9%" label="Safety Score" />
-            <Stat value="200+" label="Automated Tests" />
-            <Stat value="2" label="Risk Classes" />
+            <Stat value="Seal" label="Threshold Encryption" />
+            <Stat value="Walrus" label="Decentralized Storage" />
+            <Stat value="MemWal" label="AI Memory Layer" />
+            <Stat value="zkLogin" label="Passwordless Auth" />
           </div>
         </div>
       </section>
@@ -124,7 +146,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <span className="font-headline text-lg font-bold text-[#63f7ff]">Marina</span>
-            <p className="text-xs text-muted-foreground mt-1">Your AI assistant protecting your DeFi journey on Sui.</p>
+            <p className="text-xs text-muted-foreground mt-1">AI copilot with persistent memory on Walrus.</p>
           </div>
           <p className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">
             Powered by Walrus
@@ -136,11 +158,11 @@ export function LandingPage() {
 }
 
 function FeatureCard({ icon, title, description, tag, tagColor }: {
-  icon: string; title: string; description: string; tag: string; tagColor: string;
+  icon: React.ReactNode; title: string; description: string; tag: string; tagColor: string;
 }) {
   return (
     <div className="glass-panel p-8 rounded-3xl flex flex-col gap-6 hover:-translate-y-2 transition-all duration-300 cursor-pointer">
-      <div className="w-14 h-14 rounded-2xl bg-[#63f7ff]/10 flex items-center justify-center text-2xl">
+      <div className="w-14 h-14 rounded-2xl bg-[#63f7ff]/10 flex items-center justify-center text-[#63f7ff]">
         {icon}
       </div>
       <div>

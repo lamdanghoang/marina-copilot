@@ -18,8 +18,8 @@ export default function PortfolioPage() {
           <div key={asset.symbol} className="glass-panel p-6 rounded-2xl flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#63f7ff]/20 flex items-center justify-center text-xs font-bold text-[#63f7ff]">
-                  {asset.symbol}
+                <div className="w-10 h-10 rounded-full bg-[#63f7ff]/10 flex items-center justify-center overflow-hidden">
+                  {asset.symbol === "SUI" ? <img src="/sui-logo.svg" alt="SUI" className="w-6 h-6" /> : asset.symbol === "WAL" ? <img src="/wal-logo.svg" alt="WAL" className="w-6 h-6" /> : asset.symbol === "USDC" ? <img src="/usdc-logo.png" alt="USDC" className="w-6 h-6" /> : <span className="text-xs font-bold text-[#63f7ff]">{asset.symbol}</span>}
                 </div>
                 <div>
                   <h5 className="font-bold text-sm">{asset.symbol} Token</h5>

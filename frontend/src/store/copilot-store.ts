@@ -136,12 +136,14 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
     }
 
     try {
+      const contacts = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("marina-copilot-contacts") || "[]") : [];
       const response = await processIntent({
         message,
         walletAddress,
         conversationHistory: [...messages, userMessage],
         balances,
         memwalCredentials: memwalCredentials ?? undefined,
+        contacts,
       });
 
       // Clear status timers on response
