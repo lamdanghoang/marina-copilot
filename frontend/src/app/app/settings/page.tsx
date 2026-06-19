@@ -149,6 +149,11 @@ export default function SettingsPage() {
         <Item label="RPC" value={networkConfig.rpcUrl} />
       </Section>
 
+      {/* Contacts */}
+      <Section title="Contacts">
+        <ContactsManager />
+      </Section>
+
       {/* Data & Privacy */}
       <Section title="Data & Privacy">
         <Btn onClick={handleClearMemories} label="Clear Local Memories" desc="Remove cached action history from this browser" variant="default" />
@@ -195,6 +200,50 @@ function CopyItem({ label, value }: { label: string; value: string }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         )}
       </button>
+    </div>
+  );
+}
+
+
+function ContactsManager() {
+  const [contacts, setContacts] = useState<Array<{ name: string; address: string }>>([]);
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+
+  useEffect(() => {
+    try { setContacts(JSON.parse(localStorage.getItem("marina-copilot-contacts") || "[]")); } catch {}
+  }, []);
+
+  const handleAdd = () => {
+    if (!name.trim() || !address.trim()) return;
+    const updated = [...contacts, { name: name.trim(), address: address.trim() }];
+    setContacts(updated);
+    localStorage.setItem("marina-copilot-contacts", JSON.stringify(updated));
+    setName(""); setAddress("");
+  };
+
+  const handleRemove = (addr: string) => {
+    const updated = contacts.filter((c) => c.address !== addr);
+    setContacts(updated);
+    localStorage.setItem("marina-copilot-contacts", JSON.stringify(updated));
+  };
+
+  return (
+    <div className="space-y-3">
+      {contacts.map((c) => (
+        <div key={c.address} className="flex items-center justify-between py-1">
+          <div>
+            <span className="text-sm text-gray-300">{c.name}</span>
+            <span className="text-xs text-gray-500 font-mono ml-2">{c.address.slice(0, 8)}...{c.address.slice(-4)}</span>
+          </div>
+          <button onClick={() => handleRemove(c.address)} className="text-xs text-red-400 hover:text-red-300">✕</button>
+        </div>
+      ))}
+      <div className="flex gap-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="flex-1 rounded-md border border-border/30 bg-transparent px-3 py-1.5 text-xs focus:outline-none focus:border-[#63f7ff]/50" />
+        <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="0x..." className="flex-[2] rounded-md border border-border/30 bg-transparent px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-[#63f7ff]/50" />
+        <button onClick={handleAdd} disabled={!name || !address} className="rounded-md bg-[#63f7ff] px-3 py-1.5 text-xs font-bold text-[#002021] disabled:opacity-50">Add</button>
+      </div>
     </div>
   );
 }
