@@ -56,7 +56,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
           </div>
         )}
         <button
-          onClick={() => (dAppKit as any).disconnectWallet()}
+          onClick={() => { (dAppKit as any).disconnectWallet(); useCopilotStore.getState().disconnectWallet(); }}
           className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
         >
           Disconnect

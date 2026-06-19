@@ -84,6 +84,11 @@ export function useZkLoginSession() {
   const logout = () => {
     secureClearAll();
     localStorage.removeItem("zklogin_address");
+    localStorage.removeItem("zklogin_jwt");
+    localStorage.removeItem("zklogin_salt");
+    localStorage.removeItem("zklogin_ephemeral_key");
+    localStorage.removeItem("zklogin_randomness");
+    localStorage.removeItem("zklogin_max_epoch");
     setIsZkLogin(false);
     disconnectWallet();
   };
