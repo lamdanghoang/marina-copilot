@@ -78,14 +78,19 @@ export function useMemwalSetup(walletAddress: string | null) {
 
       // Only create if not exists
       if (!accountId) {
-        const account = await createAccount({
+        await createAccount({
           packageId: MEMWAL_PACKAGE_ID,
           registryId: MEMWAL_REGISTRY_ID,
           walletSigner,
           suiClient: suiClient as any,
           suiNetwork: networkConfig.network,
         });
-        accountId = account.accountId;
+
+        // Wait + query GraphQL to get real accountId
+        await new Promise((r) => setTimeout(r, 3000));
+        const found = await findMemwalAccount(MEMWAL_PACKAGE_ID, walletAddress);
+        if (found) accountId = found.accountId;
+        if (!accountId) throw new Error("Account created but could not find on-chain");
       }
 
       await addDelegateKey({
