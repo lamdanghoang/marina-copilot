@@ -6,6 +6,7 @@
 import {
   BedrockRuntimeClient,
   InvokeModelCommand,
+  InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { config } from "../lib/config";
 import {
@@ -287,4 +288,60 @@ function isAppError(err: unknown): err is AppError {
     "message" in err &&
     Object.values(ErrorCode).includes((err as AppError).code)
   );
+}
+
+export async function callLLMStream(
+  context: LLMContext,
+  onChunk: (text: string) => void,
+): Promise<string> {
+  const client = getBedrockClient();
+
+  const messages: Array<{ role: string; content: string }> = [];
+  for (const msg of context.conversationHistory) {
+    messages.push({ role: msg.role, content: msg.content });
+  }
+
+  const contextParts: string[] = [];
+  if (context.memories.length > 0) {
+    contextParts.push(`## User Memory\n${context.memories.join("\n")}`);
+  }
+  if (context.balances) {
+    contextParts.push(`## ${context.balances}`);
+  }
+
+  const fullUserMessage = contextParts.length > 0
+    ? `${contextParts.join("\n\n")}\n\n## User Request\n${context.userMessage}`
+    : context.userMessage;
+  messages.push({ role: "user", content: fullUserMessage });
+
+  const requestBody = JSON.stringify({
+    anthropic_version: "bedrock-2023-05-31",
+    max_tokens: 1024,
+    system: context.systemPrompt,
+    messages,
+  });
+
+  const command = new InvokeModelWithResponseStreamCommand({
+    modelId: config.bedrock.modelId,
+    contentType: "application/json",
+    accept: "application/json",
+    body: new TextEncoder().encode(requestBody),
+  });
+
+  const response = await client.send(command);
+  let fullText = "";
+
+  if (response.body) {
+    for await (const event of response.body) {
+      if (event.chunk?.bytes) {
+        const parsed = JSON.parse(new TextDecoder().decode(event.chunk.bytes));
+        if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+          fullText += parsed.delta.text;
+          onChunk(parsed.delta.text);
+        }
+      }
+    }
+  }
+
+  return fullText;
 }

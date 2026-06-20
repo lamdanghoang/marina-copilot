@@ -61,32 +61,35 @@ async function handleQueryIntent(intent: QueryIntent, balances: TokenBalance[], 
 
   if (intent.queryType === "history") {
     try {
-      const client = new SuiGrpcClient({ network: "testnet", baseUrl: config.sui.rpcUrl } as any) as any;
-      const txs = await client.queryTransactionBlocks({
-        filter: { FromAddress: walletAddress },
-        options: { showEffects: true, showInput: true },
-        limit: 10,
-        order: "descending",
+      const graphqlUrl = "https://sui-testnet.mystenlabs.com/graphql";
+      const query = `{
+        transactionBlocks(filter: { signAddress: "${walletAddress}" }, last: 10) {
+          nodes {
+            digest
+            effects { status timestamp }
+          }
+        }
+      }`;
+      const resp = await fetch(graphqlUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
       });
+      const json: any = await resp.json();
+      const nodes = json.data?.transactionBlocks?.nodes;
 
-      if (!txs.data || txs.data.length === 0) {
+      if (!nodes || nodes.length === 0) {
         return "No transactions found for your wallet yet.";
       }
 
-      const lines = txs.data.map((tx: any) => {
-        const status = tx.effects?.status?.status === "success" ? "✅" : "❌";
-        const gasUsed = tx.effects?.gasUsed;
-        const gas = gasUsed
-          ? (Number(BigInt(gasUsed.computationCost) + BigInt(gasUsed.storageCost) - BigInt(gasUsed.storageRebate)) / 1e9).toFixed(4)
-          : "?";
+      const lines = nodes.map((tx: any) => {
+        const status = tx.effects?.status === "SUCCESS" ? "✅" : "❌";
         const digest = tx.digest.slice(0, 8) + "..." + tx.digest.slice(-4);
-        const time = tx.timestampMs
-          ? new Date(Number(tx.timestampMs)).toLocaleDateString()
-          : "";
-        return `${status} ${digest} | Gas: ${gas} SUI | ${time}`;
+        const time = tx.effects?.timestamp ? new Date(tx.effects.timestamp).toLocaleDateString() : "";
+        return `${status} ${digest} | ${time}`;
       });
 
-      return `Your last ${txs.data.length} transactions:\n${lines.join("\n")}`;
+      return `Your last ${nodes.length} transactions:\n${lines.join("\n")}`;
     } catch (error) {
       console.error("[Query] History fetch failed:", error);
       return "Couldn't fetch transaction history. Please try again.";
@@ -123,6 +126,46 @@ function isAppError(value: unknown): value is AppError {
     Object.values(ErrorCode).includes((value as AppError).code)
   );
 }
+
+import { buildLLMContext, callLLMStream } from "../services/llm-client";
+
+router.post("/stream", async (req: Request, res: Response) => {
+  const { message, walletAddress, balances, memories: localMemories = [], contacts = [] } = req.body;
+  if (!message || !walletAddress) {
+    res.status(400).json({ error: "Missing message or walletAddress" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  try {
+    let memRecords: MemoryRecord[] = [];
+    if (localMemories.length > 0) {
+      memRecords = localMemories.slice(-10).map((content: string, i: number) => ({
+        id: `local-${i}`, content, type: "preference" as const, timestamp: Date.now(),
+      }));
+    }
+
+    const context = buildLLMContext({
+      message, balances,
+      conversationHistory: req.body.conversationHistory || [],
+      memories: memRecords, contacts,
+    });
+
+    await callLLMStream(context, (chunk) => {
+      res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+    });
+
+    res.write(`data: [DONE]\n\n`);
+  } catch {
+    res.write(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`);
+  } finally {
+    res.end();
+  }
+});
 
 router.post("/", async (req: Request, res: Response) => {
   const {

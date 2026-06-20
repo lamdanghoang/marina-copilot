@@ -96,6 +96,41 @@ export async function processIntent(
   }
 }
 
+export async function processIntentStream(
+  request: ProcessIntentRequest,
+  onChunk: (text: string) => void,
+): Promise<void> {
+  const memories = getLocalMemories(request.walletAddress);
+  const response = await fetch(`${config.apiUrl}/api/process-intent/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...request, memories }),
+  });
+
+  const reader = response.body?.getReader();
+  if (!reader) return;
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = line.slice(6);
+        if (data === "[DONE]") return;
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.text) onChunk(parsed.text);
+        } catch {}
+      }
+    }
+  }
+}
+
 const MEMORIES_KEY = "marina-copilot-memories";
 
 function getLocalMemories(walletAddress: string | null): string[] {

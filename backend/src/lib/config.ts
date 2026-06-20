@@ -42,7 +42,7 @@ export function loadConfig(): AppConfig {
     bedrock: {
       modelId:
         process.env.BEDROCK_MODEL_ID || "anthropic.claude-sonnet-4-20250514",
-      timeoutMs: 8000,
+      timeoutMs: 15000,
     },
     sui: {
       rpcUrl:

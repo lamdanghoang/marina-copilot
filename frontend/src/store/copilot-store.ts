@@ -6,7 +6,7 @@ import {
   MemwalCredentials,
   OnChainCapsule,
 } from "@/types";
-import { processIntent, remember } from "@/lib/api-client";
+import { processIntent, processIntentStream, remember } from "@/lib/api-client";
 
 interface CopilotStore {
   // Wallet
@@ -143,6 +143,31 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
       const messageWithFileContext = pendingFile
         ? `${message}\n[Attached file: ${pendingFile.name} (${(pendingFile.size / 1024).toFixed(1)} KB)]`
         : message;
+
+      const isLikelyQueryForStream = /what is|what's|explain|tell me|how does|what did|my history|who is/i.test(message) && !pendingFile;
+
+      if (isLikelyQueryForStream) {
+        // Streaming for knowledge/query messages
+        const streamMsgId = crypto.randomUUID();
+        set((state) => ({
+          messages: [...state.messages, { id: streamMsgId, role: "assistant" as const, content: "", type: "text" as const, timestamp: Date.now() }],
+        }));
+
+        await processIntentStream(
+          { message: messageWithFileContext, walletAddress, conversationHistory: [...messages, userMessage], balances, memwalCredentials: memwalCredentials ?? undefined, contacts },
+          (chunk) => {
+            set((state) => ({
+              messages: state.messages.map((m) => m.id === streamMsgId ? { ...m, content: m.content + chunk } : m),
+            }));
+          },
+        );
+
+        statusTimers.forEach(clearTimeout);
+        set({ isProcessing: false, statusText: "" });
+        saveMessages(get().messages, get().walletAddress);
+        return;
+      }
+
       const response = await processIntent({
         message: messageWithFileContext,
         walletAddress,
