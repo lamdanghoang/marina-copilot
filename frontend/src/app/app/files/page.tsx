@@ -129,13 +129,9 @@ export default function FilesPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search files..."
-              className="flex-1 rounded-lg border border-border/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#63f7ff]/50"
+              className="flex-1 rounded-xl border border-[rgba(0,245,255,0.15)] bg-[#0d1515] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[#63f7ff]/50"
             />
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "newest" | "size" | "name")} className="rounded-lg border border-border/20 bg-[#0a1a1a] px-3 py-2 text-xs text-muted-foreground">
-              <option value="newest">Newest</option>
-              <option value="size">Size</option>
-              <option value="name">Name</option>
-            </select>
+            <SortDropdown value={sortBy} onChange={setSortBy} />
           </div>
         )}
 
@@ -184,6 +180,37 @@ export default function FilesPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+function SortDropdown({ value, onChange }: { value: string; onChange: (v: "newest" | "size" | "name") => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const options = [{ value: "newest", label: "Newest" }, { value: "size", label: "Size" }, { value: "name", label: "Name" }];
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(!open)} className="rounded-xl border border-[rgba(0,245,255,0.15)] bg-[#0d1515] px-5 py-2.5 text-sm text-foreground font-medium flex items-center gap-2 hover:border-[#63f7ff]/50 transition-colors">
+        {options.find((o) => o.value === value)?.label}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="#63f7ff"><path d="M7 10l5 5 5-5z"/></svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 rounded-xl border border-[rgba(0,245,255,0.15)] bg-[#0d1515] py-1 shadow-lg min-w-[120px]">
+          {options.map((o) => (
+            <button key={o.value} onClick={() => { onChange(o.value as "newest" | "size" | "name"); setOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-[#63f7ff]/10 transition-colors ${o.value === value ? "text-[#63f7ff]" : "text-foreground"}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
