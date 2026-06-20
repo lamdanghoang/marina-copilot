@@ -84,7 +84,7 @@ export default function CapsulesPage() {
 
         <button
           onClick={() => setView("create")}
-          className="w-full glass-panel rounded-xl p-4 border-dashed border-[rgba(0,245,255,0.3)] hover:border-[#63f7ff] transition-colors flex items-center justify-center gap-2 text-sm text-[#63f7ff] font-bold"
+          className="w-full glass-panel rounded-xl py-3 px-4 border-dashed border-[rgba(0,245,255,0.3)] hover:border-[#63f7ff] transition-colors flex items-center justify-center gap-2 text-sm text-[#63f7ff] font-bold"
         >
           + Create New Capsule
         </button>
@@ -166,7 +166,7 @@ function CapsuleCard({ capsule: c, now, onUnlock }: { capsule: any; now: number;
         <span className={`font-headline text-2xl font-light tracking-wider ${locked ? "text-[#63f7ff]" : "text-green-400"}`}>{remaining}</span>
       </div>
       <div className="flex justify-between items-center mt-4 pt-3 border-t border-[rgba(0,245,255,0.1)]">
-        <span className="text-[10px] text-muted-foreground">Blob: {c.blob_id?.slice(0, 12)}...</span>
+        <a href={`https://walruscan.com/testnet/blob/${c.blob_id}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[10px] text-muted-foreground hover:text-[#63f7ff] transition-colors">Blob: {c.blob_id?.slice(0, 12)}... ↗</a>
         <span className="text-[10px] text-muted-foreground">{new Date(Number(c.created_at)).toLocaleDateString()}</span>
       </div>
     </div>

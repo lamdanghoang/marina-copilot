@@ -212,6 +212,17 @@ graph TB
 
 ---
 
+## Future Plans
+
+- **Yield Strategy Recommendations** — AI compares protocol APYs (Cetus, Scallop) and recommends optimal strategies
+- **Voice Commands** — STT/TTS for hands-free interaction
+- **Mainnet Deployment** — Production-ready with mainnet contracts
+- **More DeFi Protocols** — Lending, borrowing, LP management via natural language
+- **Capsule Marketplace** — Public time capsules, NFT-gated capsules
+- **Mobile App** — React Native version (in development)
+
+---
+
 ## Track Requirements
 
 ### ✅ Walrus Track

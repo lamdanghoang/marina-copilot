@@ -49,6 +49,7 @@ export interface UploadedFile {
   size: number;
   uploadDate: number;
   epochs: number;
+  endEpoch?: number;
 }
 
 // === Clients ===
@@ -65,9 +66,11 @@ function createSealClient() {
   });
 }
 
-function createWalrusClient() {
+import type { WalrusClient as WalrusClientType } from "@mysten/walrus";
+
+function createWalrusClient(): { walrus: WalrusClientType } {
   const client = createSuiClient();
-  return (client as any).$extend(walrus());
+  return client.$extend(walrus());
 }
 
 // === #1: Walrus Upload via writeBlobFlow (user signs) ===
@@ -238,6 +241,14 @@ export async function walrusDownload(blobId: string): Promise<Uint8Array> {
   return file.bytes();
 }
 
+// === Walrus System Info ===
+
+export async function getWalrusCurrentEpoch(): Promise<number> {
+  const client = createWalrusClient();
+  const state = await client.walrus.systemState();
+  return state.committee.epoch;
+}
+
 // === High-Level: Create Capsule ===
 
 export async function createCapsule(params: {
@@ -304,7 +315,15 @@ export async function uploadFileToWalrus(params: {
 }): Promise<UploadedFile> {
   const data = new Uint8Array(await params.file.arrayBuffer());
   const { blobId, blobObjectId } = await walrusUpload(data, params.sender, params.signAndExecute, params.onProgress);
-  return { blobId, blobObjectId, name: params.file.name, size: params.file.size, uploadDate: Date.now(), epochs: 3 };
+
+  // Get current epoch to calculate expiry
+  let endEpoch: number | undefined;
+  try {
+    const currentEpoch = await getWalrusCurrentEpoch();
+    endEpoch = currentEpoch + 3; // 3 epochs storage
+  } catch {}
+
+  return { blobId, blobObjectId, name: params.file.name, size: params.file.size, uploadDate: Date.now(), epochs: 3, endEpoch };
 }
 
 // === High-Level: Extend Blob Storage ===
