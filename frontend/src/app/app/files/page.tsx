@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useToast } from "@/components/Toast";
@@ -9,7 +9,11 @@ import { HardDrive, Image, FileText, Table, Film, Music, Archive, Code, File } f
 import type { UploadedFile } from "@/lib/walrus-seal";
 
 export default function FilesPage() {
-  const [files, setFiles] = useState<UploadedFile[]>(loadFiles);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "size" | "name">("newest");
+
+  useEffect(() => { setFiles(loadFiles()); }, []);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +76,7 @@ export default function FilesPage() {
       }
       await extendBlobStorage({ blobObjectId: file.blobObjectId, extendEpochs: 3, sender, signAndExecute });
       // Update local epochs
-      const updated = files.map((f) => f.blobId === file.blobId ? { ...f, epochs: (f.epochs || 3) + 3 } : f);
+      const updated = files.map((f) => f.blobId === file.blobId ? { ...f, epochs: (f.epochs || 3) + 3, endEpoch: (f.endEpoch || 0) + 3 } : f);
       setFiles(updated);
       localStorage.setItem("marina-copilot-files", JSON.stringify(updated));
       toast("Blob extended by 3 epochs!", "success");
@@ -118,23 +122,47 @@ export default function FilesPage() {
           {uploading ? status || "Uploading..." : "+ Upload File to Walrus"}
         </button>
 
+        {/* Search + Sort */}
+        {files.length > 0 && (
+          <div className="flex gap-3 items-center">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search files..."
+              className="flex-1 rounded-lg border border-border/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-[#63f7ff]/50"
+            />
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "newest" | "size" | "name")} className="rounded-lg border border-border/20 bg-[#0a1a1a] px-3 py-2 text-xs text-muted-foreground">
+              <option value="newest">Newest</option>
+              <option value="size">Size</option>
+              <option value="name">Name</option>
+            </select>
+          </div>
+        )}
+
         {/* File list */}
-        <div className="space-y-3">
-          {files.map((file, i) => (
-            <div key={i} className="glass-panel rounded-xl p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#63f7ff]/10 flex items-center justify-center text-[#63f7ff] text-lg">{getFileIcon(file.name)}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold truncate">{file.name}</p>
-                <a href={`https://walruscan.com/testnet/blob/${file.blobId}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground font-mono hover:text-[#63f7ff] transition-colors">{file.blobId.slice(0, 24)}... ↗</a>
-              </div>
-              <div className="text-right flex-shrink-0 space-y-1">
-                <p className="text-xs font-mono">{file.size > 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${file.size} B`}</p>
-                <p className="text-[10px] text-muted-foreground">{new Date(file.uploadDate).toLocaleDateString()}</p>
-                {file.endEpoch && <p className="text-[9px] text-yellow-400/80">Expires: epoch {file.endEpoch}</p>}
-                <div className="flex gap-1">
-                  <button onClick={() => handleDownload(file)} className="text-[9px] px-2 py-0.5 rounded bg-[#63f7ff]/10 text-[#63f7ff] hover:bg-[#63f7ff]/20">Download</button>
-                  <button onClick={(e) => { e.stopPropagation(); handleExtend(file); }} className="text-[9px] px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20">Extend</button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {(() => {
+            let filtered = files.filter((f) => f.name.toLowerCase().includes(search.toLowerCase()));
+            if (sortBy === "newest") filtered.sort((a, b) => b.uploadDate - a.uploadDate);
+            else if (sortBy === "size") filtered.sort((a, b) => b.size - a.size);
+            else filtered.sort((a, b) => a.name.localeCompare(b.name));
+            return filtered;
+          })().map((file, i) => (
+            <div key={i} className="glass-panel rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#63f7ff]/10 flex items-center justify-center text-[#63f7ff]">{getFileIcon(file.name)}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate">{file.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{file.size > 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${file.size} B`} · {new Date(file.uploadDate).toLocaleDateString()}</p>
                 </div>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-[rgba(0,245,255,0.1)]">
+                <a href={`https://walruscan.com/testnet/blob/${file.blobId}`} target="_blank" rel="noopener noreferrer" className="text-[9px] text-muted-foreground font-mono hover:text-[#63f7ff] transition-colors truncate max-w-[140px]">{file.blobId.slice(0, 16)}... ↗</a>
+                {file.endEpoch && <span className="text-[9px] text-yellow-400/80">epoch {file.endEpoch}</span>}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleDownload(file)} className="flex-1 text-[10px] py-1.5 rounded-lg bg-[#63f7ff]/10 text-[#63f7ff] hover:bg-[#63f7ff]/20 font-medium">Download</button>
+                <button onClick={() => handleExtend(file)} className="flex-1 text-[10px] py-1.5 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 font-medium">Extend</button>
               </div>
             </div>
           ))}

@@ -144,10 +144,27 @@ export async function walrusUpload(
   certifyTx.setSender(sender);
   const certifyResult = await signAndExecute({ transaction: certifyTx });
 
-  // Try to extract blob object ID from register result (created objects)
-  const blobObjectId = (registerResult as any)?.effects?.created?.[0]?.reference?.objectId
-    ?? (registerResult as any)?.Transaction?.effects?.created?.[0]?.objectId
-    ?? undefined;
+  // Get blob object ID by querying register tx
+  const r = registerResult as any;
+  const regDigest = r?.digest ?? r?.Transaction?.digest ?? "";
+  let blobObjectId: string | undefined;
+
+  if (regDigest) {
+    try {
+      await new Promise((res) => setTimeout(res, 2000));
+      const suiClient = createSuiClient();
+      const txDetail = await (suiClient as any).getTransaction({ digest: regDigest, include: { objectTypes: true } });
+      const objectTypes = (txDetail as any)?.Transaction?.objectTypes ?? (txDetail as any)?.objectTypes;
+      if (objectTypes) {
+        for (const [objId, objType] of Object.entries(objectTypes as Record<string, string>)) {
+          if (objType.includes("blob::Blob")) {
+            blobObjectId = objId;
+            break;
+          }
+        }
+      }
+    } catch {}
+  }
 
   return { blobId: encoded.blobId, blobObjectId };
 }
@@ -328,7 +345,6 @@ export async function uploadFileToWalrus(params: {
 
 // === High-Level: Extend Blob Storage ===
 
-const WALRUS_SYSTEM_OBJECT = "0x6c2547cbbc38025cf3adac45f63cb0a8d12ecf777cdc75a4971612bf97fdf6af";
 
 export async function extendBlobStorage(params: {
   blobObjectId: string;
@@ -336,26 +352,12 @@ export async function extendBlobStorage(params: {
   sender: string;
   signAndExecute: SignAndExecute;
 }): Promise<void> {
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  // Need WAL payment — split from gas (auto-swap handled by caller if needed)
-  const [walCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(BigInt(100_000_000))]); // 0.1 WAL estimate
-  const walPayment = tx.moveCall({
-    target: `${networkConfig.walExchangePackage}::wal_exchange::exchange_all_for_wal`,
-    arguments: [tx.object(networkConfig.walExchangeId), walCoin],
+  const client = createWalrusClient();
+  const tx = await client.walrus.extendBlobTransaction({
+    blobObjectId: params.blobObjectId,
+    epochs: params.extendEpochs,
   });
-
-  tx.moveCall({
-    target: `0x7e12d67a52106ddd5f26c6ff4fe740ba5dea7cfc138d5b1d33863ba9098aa6fe::system::extend_blob`,
-    arguments: [
-      tx.object(WALRUS_SYSTEM_OBJECT),
-      tx.object(params.blobObjectId),
-      tx.pure.u32(params.extendEpochs),
-      walPayment,
-    ],
-  });
-
+  tx.setSender(params.sender);
   await params.signAndExecute({ transaction: tx });
 }
 

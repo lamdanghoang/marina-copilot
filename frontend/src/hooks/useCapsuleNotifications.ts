@@ -25,16 +25,13 @@ export function useCapsuleNotifications() {
     } as any).then((res: any) => {
       const nodes = (res.data as any)?.objects?.nodes || [];
       const now = Date.now();
-      let unlockable = 0;
       let soonUnlock = 0;
 
       for (const n of nodes) {
         const unlockDate = Number(n.asMoveObject?.contents?.json?.unlock_date || 0);
-        if (unlockDate <= now) unlockable++;
-        else if (unlockDate - now < 3600000) soonUnlock++; // < 1 hour
+        if (unlockDate > now && unlockDate - now < 3600000) soonUnlock++;
       }
 
-      if (unlockable > 0) toast(`🔓 ${unlockable} capsule${unlockable > 1 ? "s" : ""} ready to unlock!`, "success");
       if (soonUnlock > 0) toast(`⏰ ${soonUnlock} capsule${soonUnlock > 1 ? "s" : ""} unlocking within 1 hour`, "info");
     }).catch(() => {});
   }, [walletAddress, toast]);
