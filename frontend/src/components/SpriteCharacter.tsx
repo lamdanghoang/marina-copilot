@@ -37,14 +37,23 @@ export function SpriteCharacter({ animation, size = 280, fps = 6 }: SpriteCharac
   const [sheet, setSheet] = useState<string>("");
   const prevAnim = useRef(animation);
 
-  // Pick random sheet when animation changes
+  // Pick random sheet when animation changes or periodically in idle
   useEffect(() => {
     const key = ANIM_MAP[animation] || "idle";
     const sheets = ANIMATIONS[key] || ANIMATIONS.idle;
-    const randomSheet = sheets[Math.floor(Math.random() * sheets.length)];
-    setSheet(randomSheet);
+    const pick = () => {
+      const randomSheet = sheets[Math.floor(Math.random() * sheets.length)];
+      setSheet(randomSheet);
+    };
+    pick();
     setFrame(0);
     prevAnim.current = animation;
+
+    // Re-randomize every 8s when idle
+    if (animation === "idle") {
+      const timer = setInterval(pick, 8000);
+      return () => clearInterval(timer);
+    }
   }, [animation]);
 
   // Animate frames

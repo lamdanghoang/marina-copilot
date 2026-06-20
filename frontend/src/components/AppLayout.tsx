@@ -12,10 +12,12 @@ function useCharacterAnimation(): string {
   const messages = useCopilotStore((s) => s.messages);
   const lastMsg = messages[messages.length - 1];
   if (isProcessing) return "thinking";
-  if (lastMsg?.type === "success") return "happy";
-  if (lastMsg?.type === "error") return "sad";
-  if (lastMsg?.type === "preview") return "talking";
-  if (lastMsg?.role === "assistant") return "talking";
+  // Only "talking" if last assistant message is within 5 seconds
+  if (lastMsg?.role === "assistant" && Date.now() - lastMsg.timestamp < 5000) {
+    if (lastMsg.type === "success") return "happy";
+    if (lastMsg.type === "error") return "sad";
+    return "talking";
+  }
   return "idle";
 }
 
