@@ -149,6 +149,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
 
       if (isLikelyQueryForStream) {
         // Streaming for knowledge/query messages
+        statusTimers.forEach(clearTimeout);
         const streamMsgId = crypto.randomUUID();
         set((state) => ({
           messages: [...state.messages, { id: streamMsgId, role: "assistant" as const, content: "", type: "text" as const, timestamp: Date.now() }],

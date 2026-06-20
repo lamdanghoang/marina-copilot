@@ -155,6 +155,9 @@ router.post("/stream", async (req: Request, res: Response) => {
       memories: memRecords, contacts,
     });
 
+    // Override system prompt for streaming — plain text response, no JSON
+    context.systemPrompt = "You are Marina Copilot, an AI assistant on Sui blockchain. Answer knowledge questions clearly and concisely in plain text. Do NOT use markdown formatting (no **, no ##, no bullet -). Use emojis sparingly for visual separation. Keep answers short (under 150 words). If you have user memories, reference them naturally. Do NOT output JSON.";
+
     await callLLMStream(context, (chunk) => {
       res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
     });
