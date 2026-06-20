@@ -62,8 +62,8 @@ export function useActionExecution() {
   return { executeAction, fileInputRef };
 }
 
-function addMessage(content: string, type: "text" | "success" | "error") {
-  const msg: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content, type, timestamp: Date.now() };
+function addMessage(content: string, type: "text" | "success" | "error", metadata?: Record<string, unknown>) {
+  const msg: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content, type, timestamp: Date.now(), metadata };
   useCopilotStore.setState((state) => {
     const msgs = [...state.messages, msg];
     saveMessages(msgs, state.walletAddress);
@@ -104,8 +104,9 @@ async function executeCapsuleAction(
     const unlockDate = new Date(capsule.unlockTimeMs).toLocaleString();
     const explorerUrl = capsule.digest ? `https://suiscan.xyz/${networkConfig.network}/tx/${capsule.digest}` : "";
     addMessage(
-      `✅ Time Capsule created!\n\n🔒 Encrypted with Seal\n🐘 Stored on Walrus: ${capsule.blobId.slice(0, 16)}...\n⏰ Unlocks: ${unlockDate}\n📬 Recipient: ${capsule.recipient}${explorerUrl ? `\n🔗 [View on Explorer](${explorerUrl})` : ""}`,
+      `✅ Time Capsule created!\n\n🔒 Encrypted with Seal\n🐘 Stored on Walrus: ${capsule.blobId.slice(0, 16)}...\n⏰ Unlocks: ${unlockDate}\n📬 Recipient: ${capsule.recipient}`,
       "success",
+      { txDigest: capsule.digest, explorerUrl },
     );
 
     // Remember action

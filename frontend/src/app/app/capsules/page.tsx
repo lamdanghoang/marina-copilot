@@ -60,6 +60,7 @@ export default function CapsulesPage() {
         unlockTimeMs: Number(capsule.unlock_date),
         recipient: capsule.recipient,
         userAddress: walletAddress,
+        signPersonalMessage: ({ message }) => dAppKit.signPersonalMessage({ message }),
       });
       setDecryptedContent(content);
       toast("Capsule decrypted!", "success");

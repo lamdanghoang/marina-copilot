@@ -22,7 +22,7 @@ const SEAL_PACKAGE_ID = networkConfig.sealPackageId;
 const SEAL_KEY_SERVERS = [
   { objectId: "0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75", weight: 1 },
   { objectId: "0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8", weight: 1 },
-  { objectId: "0x6a0726a1ea3d62ba2f2ae51104f2c3633c003fb75621d06fde47f04dc930ba06", weight: 1 },
+  { objectId: "0x9c949e53c36ab7a9c484ed9e8b43267a77d4b8d70e79aa6b39042e3d4c434105", weight: 1 },
 ];
 
 // === Types ===
@@ -207,21 +207,23 @@ export async function sealDecrypt(
   encryptedData: Uint8Array,
   idHex: string,
   userAddress: string,
+  signPersonalMessage: SignPersonalMessage,
 ): Promise<string> {
   const { Ed25519Keypair } = await import("@mysten/sui/keypairs/ed25519");
   const client = createSealClient();
   const suiClient = createSuiClient();
 
-  // Create ephemeral keypair for session (self-signed, no wallet needed)
-  const sessionKp = new Ed25519Keypair();
-
   const sessionKey = await SessionKey.create({
-    address: sessionKp.getPublicKey().toSuiAddress(),
+    address: userAddress,
     packageId: SEAL_PACKAGE_ID,
     ttlMin: 10,
-    signer: sessionKp,
     suiClient: suiClient as any,
   });
+
+  // User signs the session personal message
+  const personalMsg = sessionKey.getPersonalMessage();
+  const { signature } = await signPersonalMessage({ message: personalMsg });
+  await sessionKey.setPersonalMessageSignature(signature);
 
   // Build seal_approve tx
   const idBytes: number[] = [];
@@ -368,6 +370,7 @@ export async function unlockCapsule(params: {
   unlockTimeMs: number;
   recipient: string;
   userAddress: string;
+  signPersonalMessage: SignPersonalMessage;
 }): Promise<string> {
   if (Date.now() < params.unlockTimeMs) {
     throw new Error("Capsule not yet unlockable");
@@ -385,5 +388,5 @@ export async function unlockCapsule(params: {
   const encryptedData = await walrusDownload(params.blobId);
 
   // Decrypt with Seal
-  return sealDecrypt(encryptedData, idHex, params.userAddress);
+  return sealDecrypt(encryptedData, idHex, params.userAddress, params.signPersonalMessage);
 }
