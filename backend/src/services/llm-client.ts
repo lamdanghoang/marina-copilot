@@ -111,7 +111,8 @@ You MUST return valid JSON matching this exact schema:
 - If the user asks about an unsupported action, set intent=null and explain what actions are available
 - If a token symbol is not in the supported list, set intent=null and indicate the unrecognized token
 - For "check balance", "how much do I have", "what's my balance" → use action "query" with queryType "balance"
-- For "transaction history", "recent transactions", "what did I do" → use action "query" with queryType "history"
+- For "transaction history", "recent transactions" → use action "query" with queryType "history"
+- For "what did I do", "my history", "what happened earlier" → if memories are provided in context, summarize them directly as a text response (action "query" with queryType "balance"). Do NOT fetch transaction history for these — use the provided memories instead.
 - For "create capsule", "time capsule", "encrypt a message", "lock this message" → use action "create_capsule" with content and unlockAfterMinutes
 - For "upload file", "store file", "save to walrus" → use action "upload_file"
 - For "send", "transfer", "send X to address" → use action "transfer" with token, amount, recipient
