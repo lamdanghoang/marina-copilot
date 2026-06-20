@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useDAppKit, useCurrentClient, useCurrentAccount } from "@mysten/dapp-kit-react";
-import { createAccount, addDelegateKey, generateDelegateKey } from "@mysten-incubation/memwal/account";
+import { generateDelegateKey } from "@mysten-incubation/memwal/account";
 import { networkConfig } from "@/lib/config";
 import { findMemwalAccount } from "@/lib/sui-graphql";
 
@@ -78,13 +78,14 @@ export function useMemwalSetup(walletAddress: string | null) {
 
       // Only create if not exists
       if (!accountId) {
-        await createAccount({
-          packageId: MEMWAL_PACKAGE_ID,
-          registryId: MEMWAL_REGISTRY_ID,
-          walletSigner,
-          suiClient: suiClient as any,
-          suiNetwork: networkConfig.network,
+        // Build create_account tx manually (SDK createAccount needs effects we can't provide)
+        const { Transaction } = await import("@mysten/sui/transactions");
+        const tx = new Transaction();
+        tx.moveCall({
+          target: `${MEMWAL_PACKAGE_ID}::account::create_account`,
+          arguments: [tx.object(MEMWAL_REGISTRY_ID), tx.object("0x6")],
         });
+        await walletSigner.signAndExecuteTransaction({ transaction: tx });
 
         // Wait + query GraphQL to get real accountId
         await new Promise((r) => setTimeout(r, 3000));
@@ -93,15 +94,20 @@ export function useMemwalSetup(walletAddress: string | null) {
         if (!accountId) throw new Error("Account created but could not find on-chain");
       }
 
-      await addDelegateKey({
-        packageId: MEMWAL_PACKAGE_ID,
-        accountId,
-        publicKey: delegate.publicKey,
-        label: "Marina Copilot",
-        walletSigner,
-        suiClient: suiClient as any,
-        suiNetwork: networkConfig.network,
+      // Add delegate key manually (SDK addDelegateKey also needs effects we can't provide)
+      const { Transaction: Tx } = await import("@mysten/sui/transactions");
+      const tx2 = new Tx();
+      tx2.moveCall({
+        target: `${MEMWAL_PACKAGE_ID}::account::add_delegate_key`,
+        arguments: [
+          tx2.object(accountId),
+          tx2.pure.vector("u8", Array.from(delegate.publicKey)),
+          tx2.pure.address(delegate.suiAddress),
+          tx2.pure.string("Marina Copilot"),
+          tx2.object("0x6"),
+        ],
       });
+      await walletSigner.signAndExecuteTransaction({ transaction: tx2 });
 
       const creds: MemwalCredentials = {
         accountId,
