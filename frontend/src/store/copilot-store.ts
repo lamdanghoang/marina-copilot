@@ -144,7 +144,8 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
         ? `${message}\n[Attached file: ${pendingFile.name} (${(pendingFile.size / 1024).toFixed(1)} KB)]`
         : message;
 
-      const isLikelyQueryForStream = /what is|what's|explain|tell me|how does|what did|my history|who is/i.test(message) && !pendingFile;
+      const hasActionKeywords = /swap|send|transfer|stake|upload|create.*capsule|lock|encrypt/i.test(message);
+      const isLikelyQueryForStream = /what is|what's|explain|tell me about|how does|who is|describe/i.test(message) && !hasActionKeywords && !pendingFile;
 
       if (isLikelyQueryForStream) {
         // Streaming for knowledge/query messages
