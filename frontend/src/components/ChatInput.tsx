@@ -21,6 +21,7 @@ export function ChatInput({ onSend, isDisabled, placeholder }: ChatInputProps) {
     onSend(trimmed, attachedFile ?? undefined);
     setValue("");
     setAttachedFile(null);
+    if (inputRef.current) inputRef.current.style.height = "auto";
     setTimeout(() => inputRef.current?.focus(), 0);
   }, [value, isDisabled, onSend, attachedFile]);
 
