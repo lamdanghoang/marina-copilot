@@ -126,7 +126,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
     saveMessages([...messages, userMessage], get().walletAddress);
 
     // Only show transaction-related status for non-query messages
-    const isLikelyQuery = /balance|history|portfolio|how much/i.test(message);
+    const isLikelyQuery = /balance|history|portfolio|how much|what did|what is|what's|explain|tell me/i.test(message);
     const statusTimers: ReturnType<typeof setTimeout>[] = [];
     if (!isLikelyQuery) {
       statusTimers.push(
