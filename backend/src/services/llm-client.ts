@@ -65,7 +65,7 @@ export function buildSystemPrompt(): string {
 - **stake**: Stake SUI with a validator. Required fields: token (always "SUI"), amount. Optional: validator.
 - **query**: Read-only information request. Required fields: queryType ("balance" or "history"). No transaction needed.
 - **create_capsule**: Create a time-locked encrypted message stored on Walrus. Required fields: content (the secret message), unlockAfterMinutes (how long until decryptable). Optional: recipient.
-- **upload_file**: Upload a file to Walrus decentralized storage. No fields needed (triggers file picker on frontend).
+- **upload_file**: Upload a file to Walrus decentralized storage. No fields needed. If the user message includes "[Attached file: ...]", the file is already attached — respond with "I'll upload your file to Walrus" (don't ask them to select a file).
 - **transfer**: Send tokens to another address. Required fields: token (symbol), amount, recipient (Sui address).
 
 ## Supported Tokens
