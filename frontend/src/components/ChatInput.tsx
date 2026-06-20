@@ -12,7 +12,7 @@ interface ChatInputProps {
 export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [dragOver, setDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = useCallback(() => {
@@ -23,8 +23,8 @@ export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: Cha
     setTimeout(() => inputRef.current?.focus(), 0);
   }, [value, isDisabled, onSend]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
@@ -68,15 +68,16 @@ export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: Cha
             </svg>
           </button>
 
-          <input
+          <textarea
             ref={inputRef}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => { setValue(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
             onKeyDown={handleKeyDown}
             disabled={isDisabled}
             placeholder={placeholder ?? "Message Marina Copilot..."}
             aria-label="Message input"
-            className="flex-1 border-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            rows={1}
+            className="flex-1 border-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-y-auto"
           />
           <button
             onClick={handleSubmit}
