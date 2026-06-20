@@ -50,7 +50,8 @@ export function useActionExecution() {
     if (action === "create_capsule") {
       await executeCapsuleAction(params, sender, signAndExecute);
     } else if (action === "upload_file") {
-      const file = params.file as File | undefined;
+      const file = (params.file as File | undefined) ?? useCopilotStore.getState().pendingFile;
+      useCopilotStore.setState({ pendingFile: null });
       if (file) {
         await executeFileUpload(file, sender, signAndExecute);
       } else {
@@ -130,7 +131,7 @@ async function executeFileUpload(file: File, sender: string, signAndExecute: (ar
     existing.push(result);
     saveFiles(existing);
     const sizeStr = result.size > 1024 ? `${(result.size / 1024).toFixed(1)} KB` : `${result.size} B`;
-    addMessage(`✅ File uploaded to Walrus!\n\n📄 ${result.name} (${sizeStr})\n🐘 Blob ID: ${result.blobId.slice(0, 20)}...`, "success");
+    addMessage(`✅ File uploaded to Walrus!\n\n📄 ${result.name} (${sizeStr})\n🐘 Blob ID: ${result.blobId.slice(0, 20)}...`, "success", { explorerUrl: `https://walruscan.com/testnet/blob/${result.blobId}`, txDigest: result.blobId.slice(0, 12) });
     rememberAction(sender, `Uploaded file "${result.name}" (${sizeStr}) to Walrus: ${result.blobId.slice(0, 16)}`, { action: "upload_file", blobId: result.blobId, fileName: result.name, size: result.size });
   } catch (error) {
     addMessage(`❌ Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
@@ -172,7 +173,7 @@ function triggerFileUpload(
       saveFiles(existing);
 
       const sizeStr = result.size > 1024 ? `${(result.size / 1024).toFixed(1)} KB` : `${result.size} B`;
-      addMessage(`✅ File uploaded to Walrus!\n\n📄 ${result.name} (${sizeStr})\n🐘 Blob ID: ${result.blobId.slice(0, 20)}...`, "success");
+      addMessage(`✅ File uploaded to Walrus!\n\n📄 ${result.name} (${sizeStr})\n🐘 Blob ID: ${result.blobId.slice(0, 20)}...`, "success", { explorerUrl: `https://walruscan.com/testnet/blob/${result.blobId}`, txDigest: result.blobId.slice(0, 12) });
 
       // Remember action
       rememberAction(sender, `Uploaded file "${result.name}" (${sizeStr}) to Walrus: ${result.blobId.slice(0, 16)}`, {

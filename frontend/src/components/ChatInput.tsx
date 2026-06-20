@@ -3,14 +3,14 @@
 import { useState, useCallback, useRef } from "react";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
-  onFileAttach?: (file: File) => void;
+  onSend: (message: string, file?: File) => void;
   isDisabled: boolean;
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: ChatInputProps) {
+export function ChatInput({ onSend, isDisabled, placeholder }: ChatInputProps) {
   const [value, setValue] = useState("");
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,10 +18,11 @@ export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: Cha
   const handleSubmit = useCallback(() => {
     const trimmed = value.trim();
     if (!trimmed || isDisabled) return;
-    onSend(trimmed);
+    onSend(trimmed, attachedFile ?? undefined);
     setValue("");
+    setAttachedFile(null);
     setTimeout(() => inputRef.current?.focus(), 0);
-  }, [value, isDisabled, onSend]);
+  }, [value, isDisabled, onSend, attachedFile]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -31,7 +32,8 @@ export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: Cha
   };
 
   const handleFile = (file: File) => {
-    if (onFileAttach) onFileAttach(file);
+    setAttachedFile(file);
+    inputRef.current?.focus();
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -51,12 +53,19 @@ export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: Cha
       <div className="mx-auto max-w-3xl">
         {dragOver && (
           <div className="mb-2 rounded-xl border-2 border-dashed border-[#63f7ff] bg-[#63f7ff]/5 p-4 text-center text-sm text-[#63f7ff]">
-            Drop file to upload to Walrus
+            Drop file to attach
+          </div>
+        )}
+        {attachedFile && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg bg-[#63f7ff]/10 px-3 py-1.5 text-xs text-[#63f7ff]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span className="truncate max-w-[200px]">{attachedFile.name}</span>
+            <span className="text-muted-foreground">({(attachedFile.size / 1024).toFixed(1)} KB)</span>
+            <button onClick={() => setAttachedFile(null)} className="ml-auto hover:text-red-400">✕</button>
           </div>
         )}
         <div className="glass-panel flex items-center gap-2 rounded-full border border-border/20 p-2 pl-4 shadow-[0_0_40px_rgba(0,0,0,0.3)]">
-          {/* Attach button */}
-          <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+          <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = ""; }} />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isDisabled}
@@ -74,7 +83,7 @@ export function ChatInput({ onSend, onFileAttach, isDisabled, placeholder }: Cha
             onChange={(e) => { setValue(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
             onKeyDown={handleKeyDown}
             disabled={isDisabled}
-            placeholder={placeholder ?? "Message Marina Copilot..."}
+            placeholder={attachedFile ? "Tell Marina what to do with this file..." : (placeholder ?? "Message Marina Copilot...")}
             aria-label="Message input"
             rows={1}
             className="flex-1 border-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-y-auto"

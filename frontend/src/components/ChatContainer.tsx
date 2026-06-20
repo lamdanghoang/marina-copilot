@@ -42,8 +42,12 @@ export function ChatContainer() {
 
   const isWalletConnected = !!walletAddress || !!account?.address;
 
-  const handleFileAttach = (file: File) => {
-    executeAction("upload_file", { file });
+  const handleSend = (message: string, file?: File) => {
+    if (file) {
+      // Store file, send message to LLM which will trigger upload_file action
+      useCopilotStore.setState({ pendingFile: file });
+    }
+    sendMessage(message);
   };
 
   return (
@@ -86,8 +90,7 @@ export function ChatContainer() {
 
       {/* Input */}
       <ChatInput
-        onSend={sendMessage}
-        onFileAttach={handleFileAttach}
+        onSend={handleSend}
         isDisabled={isProcessing || !isWalletConnected}
         placeholder={
           !isWalletConnected ? "Connect wallet to start" : undefined

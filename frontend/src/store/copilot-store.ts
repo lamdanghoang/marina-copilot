@@ -27,6 +27,7 @@ interface CopilotStore {
 
   // Pending action (capsule/file) for frontend execution
   pendingAction: ProcessIntentResponse["actionRequest"] | null;
+  pendingFile: File | null;
 
   // Actions
   sendMessage(message: string): Promise<void>;
@@ -102,6 +103,7 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
   statusText: "",
   currentPreview: null,
   pendingAction: null,
+  pendingFile: null,
 
   sendMessage: async (message: string) => {
     const { walletAddress, balances, messages, memwalCredentials } = get();
@@ -137,8 +139,12 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
 
     try {
       const contacts = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("marina-copilot-contacts") || "[]") : [];
+      const pendingFile = get().pendingFile;
+      const messageWithFileContext = pendingFile
+        ? `${message}\n[Attached file: ${pendingFile.name} (${(pendingFile.size / 1024).toFixed(1)} KB)]`
+        : message;
       const response = await processIntent({
-        message,
+        message: messageWithFileContext,
         walletAddress,
         conversationHistory: [...messages, userMessage],
         balances,
