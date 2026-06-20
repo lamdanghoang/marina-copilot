@@ -155,18 +155,19 @@ export const useCopilotStore = create<CopilotStore>((set, get) => {
           messages: [...state.messages, { id: streamMsgId, role: "assistant" as const, content: "", type: "text" as const, timestamp: Date.now() }],
         }));
 
-        await processIntentStream(
-          { message: messageWithFileContext, walletAddress, conversationHistory: [...messages, userMessage], balances, memwalCredentials: memwalCredentials ?? undefined, contacts },
-          (chunk) => {
-            set((state) => ({
-              messages: state.messages.map((m) => m.id === streamMsgId ? { ...m, content: m.content + chunk } : m),
-            }));
-          },
-        );
-
-        statusTimers.forEach(clearTimeout);
-        set({ isProcessing: false, statusText: "" });
-        saveMessages(get().messages, get().walletAddress);
+        try {
+          await processIntentStream(
+            { message: messageWithFileContext, walletAddress, conversationHistory: [...messages, userMessage], balances, memwalCredentials: memwalCredentials ?? undefined, contacts },
+            (chunk) => {
+              set((state) => ({
+                messages: state.messages.map((m) => m.id === streamMsgId ? { ...m, content: m.content + chunk } : m),
+              }));
+            },
+          );
+        } finally {
+          set({ isProcessing: false, statusText: "" });
+          saveMessages(get().messages, get().walletAddress);
+        }
         return;
       }
 
