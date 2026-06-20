@@ -1,9 +1,8 @@
 # Marina Copilot
 
-**Your AI-powered DeFi assistant on Sui — just say what you want.**
+**AI copilot with persistent memory, encrypted capsules, and decentralized storage — powered by Walrus on Sui.**
 
 ![Sui Overflow 2026](https://img.shields.io/badge/Sui_Overflow-2026-blue)
-![Agentic Web](https://img.shields.io/badge/Track-Agentic_Web_(Intent_Engine)-purple)
 ![Walrus](https://img.shields.io/badge/Track-Walrus-green)
 ![Sui Testnet](https://img.shields.io/badge/Deployed-Sui_Testnet-cyan)
 
@@ -11,31 +10,29 @@
 
 ## The Problem
 
-DeFi on Sui is powerful, but using it requires understanding liquidity pools, slippage, routing, and navigating multiple protocol UIs. Most crypto holders never touch DeFi because the barrier is too high.
+AI assistants today are stateless — they forget everything between sessions. Users repeat themselves, lose context, and can't trust AI with sensitive data because it's stored on centralized servers they don't control.
 
 ## The Solution
 
-Marina Copilot lets you interact with DeFi through conversation. Type your financial goal in plain English — the AI handles everything else safely.
+Marina Copilot gives AI **persistent, user-owned memory** on Walrus. Your preferences, history, and encrypted data live on decentralized storage — controlled by your on-chain keys, revocable anytime.
 
 ```
-You: "Swap 100 USDC to SUI"
+You: "Create a capsule for tomorrow: Happy Birthday!"
 
-Marina: Compiling transaction...
+Marina: Encrypting with Seal...
         ┌───────────────────────────────────────┐
-        │ 📋 Transaction Preview                 │
+        │ 🔒 Time Capsule Created                │
         │                                        │
-        │ ① Swap 100 USDC → ~24.8 SUI via Cetus │
-        │ ② Receive minimum 24.55 SUI            │
+        │ Encrypted with Seal threshold crypto   │
+        │ Stored on Walrus: SxboTYV8...          │
+        │ Unlocks: Jun 21, 2026 00:00            │
+        │ Recipient: 0x6bd0...4284               │
         │                                        │
-        │ Rate: 1 SUI ≈ $4.03                    │
-        │ Price impact: 0.3%                     │
-        │ ✅ No risks detected                   │
-        │                                        │
-        │ [Confirm & Sign]     [Cancel]           │
+        │ 🔗 View on Explorer                    │
         └───────────────────────────────────────┘
 ```
 
-**Nothing executes until you explicitly confirm.**
+**Only the recipient can decrypt after the time-lock expires.**
 
 ---
 
@@ -105,30 +102,42 @@ Marina: Compiling transaction...
 
 ## Key Features
 
-### 🗣️ Natural Language → Sui PTB
-- **Transaction intents**: "swap 100 USDC to SUI", "stake 5 SUI" → compile PTB → preview → confirm
-- **Read-only queries**: "What's my balance?", "Show history" → instant response, no confirmation needed
-- **Smart defaults**: remembers your preferences, skips repetitive questions
+### 🔒 Time Capsules (Seal + Walrus)
+- Encrypt messages with Seal threshold encryption
+- Store encrypted blob on Walrus decentralized storage
+- On-chain capsule metadata (blob_id, unlock_date, recipient)
+- Only recipient can decrypt after time-lock expires
+- Custom `seal_policy` Move contract for access control
 
-### 🛡️ Guardian Risk Assessment
-Every transaction is checked BEFORE preview:
-- **Slippage**: flags when price impact exceeds 1%, shows estimated dollar loss
-- **Concentration**: flags when a single asset would exceed 70% of your portfolio
-- **Cumulative**: considers your last 30 days of trading to detect patterns
-- **DEX fallback**: if preferred DEX has no route, automatically tries alternatives
-
-### 🧠 Persistent Memory via Walrus (MemWal) — User Owns
+### 🧠 Persistent Memory via Walrus (MemWal)
 - Each user creates their own MemWal account **on-chain** (one-time setup)
 - User delegates access to app via Ed25519 key (revocable anytime)
 - Memory encrypted (Seal) and stored on Walrus (decentralized, portable)
 - Cross-session persistence: close browser → reopen → recalls preferences
+- AI remembers swap history, capsule creations, file uploads
+
+### 🐘 Decentralized File Storage
+- Upload files to Walrus via SDK (writeBlobFlow, user signs register + certify)
+- Auto-swap SUI→WAL when insufficient balance
+- Extend blob storage epochs on-chain
+- Download from Walrus aggregator nodes
+
+### 🗣️ Natural Language → Sui PTB
+- **Transaction intents**: "swap 100 USDC to SUI", "send 5 SUI to 0x...", "stake 5 SUI"
+- **Capsule creation**: "create a capsule for 0x... unlocking in 5 minutes"
+- **File upload**: drag & drop or "upload a file to Walrus"
+- **Read-only queries**: "What's my balance?", "Show history"
+- **Knowledge Q&A**: "What is Walrus?", "Explain Seal encryption"
+- **Contact resolution**: "send 1 SUI to Minh" → resolves from address book
+
+### 🛡️ Guardian Risk Assessment
+Every transaction is checked BEFORE preview:
+- **Slippage**: flags when price impact exceeds 1%
+- **Concentration**: flags when a single asset would exceed 70% of portfolio
 
 ### 🔑 Dual Authentication
-- **Wallet extension**: Sui Wallet, Suiet, etc. (standard dapp-kit)
+- **Wallet extension**: Slush, Sui Wallet (standard dapp-kit)
 - **zkLogin (Google)**: Sign in with Google — no seed phrase needed (via Enoki)
-
-### 👁️ Human-Readable Preview
-Every PTB rendered as plain-language steps. See exactly what will happen. Cancel anytime.
 
 ---
 
@@ -191,11 +200,14 @@ graph TB
 |-----------|-----------|
 | Frontend | Next.js 14, TypeScript, Tailwind |
 | Wallet | @mysten/dapp-kit + zkLogin (Enoki) |
-| Backend | Express.js, TypeScript, AWS Lambda |
+| Backend | Express.js, TypeScript, AWS Lightsail |
 | AI | Claude Sonnet (AWS Bedrock) — single merged call |
 | DEX | Cetus Aggregator SDK |
 | Blockchain | @mysten/sui SDK, Sui Testnet |
 | Memory | @mysten-incubation/memwal (per-user accounts) |
+| Encryption | @mysten/seal (threshold encryption) |
+| Storage | @mysten/walrus SDK (writeBlobFlow) |
+| Contract | Move (marina_capsule: capsule + seal_policy) |
 | Testing | 200+ tests (Vitest + fast-check property-based) |
 
 ---
