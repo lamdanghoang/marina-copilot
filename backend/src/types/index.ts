@@ -90,6 +90,7 @@ export interface CreateCapsuleIntent {
 
 export interface UploadFileIntent {
   action: "upload_file";
+  epochs?: number;
 }
 
 export interface TransferIntent {

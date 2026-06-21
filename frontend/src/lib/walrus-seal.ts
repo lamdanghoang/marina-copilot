@@ -115,7 +115,7 @@ export async function walrusUpload(
 
   // Check WAL balance vs storage cost
   onProgress?.("Checking WAL balance...");
-  const cost = await client.walrus.storageCost(data.length, 5);
+  const cost = await client.walrus.storageCost(data.length, epochs);
   const walBalance = await getWalBalance(sender);
 
   // Auto-swap SUI→WAL if insufficient

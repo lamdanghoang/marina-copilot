@@ -265,13 +265,14 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     if (intent.action === "upload_file") {
+      const hasFile = message.includes("[Attached file:");
       const response: ProcessIntentResponse = {
         type: "action_request",
         memoryIndicator: parserOutput.memoryIndicator,
         actionRequest: {
           action: "upload_file",
-          params: {},
-          message: "I'll help you upload a file to Walrus decentralized storage. Please select a file.",
+          params: { epochs: intent.epochs || 5 },
+          message: hasFile ? `I'll upload your file to Walrus for ${intent.epochs || 5} epochs.` : "Please attach a file to upload.",
         },
       };
       return res.json(response);
