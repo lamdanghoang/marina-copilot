@@ -164,8 +164,9 @@ export default function FilesPage() {
           ))}
 
           {files.length === 0 && !uploading && (
-            <div className="glass-panel rounded-xl p-8 text-center">
-              <p className="text-sm text-muted-foreground">No files stored yet. Upload your first file!</p>
+            <div className="col-span-full glass-panel rounded-xl p-12 text-center">
+              <HardDrive size={32} className="text-[#63f7ff]/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">No files yet. Upload your first file to Walrus!</p>
             </div>
           )}
         </div>
