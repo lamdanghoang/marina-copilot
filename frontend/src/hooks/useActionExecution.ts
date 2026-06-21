@@ -53,7 +53,8 @@ export function useActionExecution() {
       const file = (params.file as File | undefined) ?? useCopilotStore.getState().pendingFile;
       useCopilotStore.setState({ pendingFile: null });
       if (file) {
-        await executeFileUpload(file, sender, signAndExecute);
+        const epochs = (params.epochs as number) || 5;
+        await executeFileUpload(file, sender, signAndExecute, epochs);
       } else {
         triggerFileUpload(fileInputRef, sender, signAndExecute);
       }
@@ -122,11 +123,11 @@ async function executeCapsuleAction(
 }
 
 
-async function executeFileUpload(file: File, sender: string, signAndExecute: (args: { transaction: any }) => Promise<any>) {
+async function executeFileUpload(file: File, sender: string, signAndExecute: (args: { transaction: any }) => Promise<any>, epochs = 5) {
   useCopilotStore.setState({ isProcessing: true, statusText: "Uploading..." });
   try {
     const { uploadFileToWalrus } = await import("@/lib/walrus-seal");
-    const result = await uploadFileToWalrus({ file, sender, signAndExecute, onProgress: (step) => useCopilotStore.setState({ statusText: step }) });
+    const result = await uploadFileToWalrus({ file, sender, signAndExecute, epochs, onProgress: (step) => useCopilotStore.setState({ statusText: step }) });
     const existing = loadFiles();
     existing.push(result);
     saveFiles(existing);

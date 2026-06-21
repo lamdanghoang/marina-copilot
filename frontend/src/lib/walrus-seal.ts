@@ -105,6 +105,7 @@ export async function walrusUpload(
   sender: string,
   signAndExecute: SignAndExecute,
   onProgress?: (step: string) => void,
+  epochs = 5,
 ): Promise<{ blobId: string; blobObjectId?: string }> {
   const client = createWalrusClient();
 
@@ -129,7 +130,7 @@ export async function walrusUpload(
 
   // Register blob (user signs)
   onProgress?.("Registering on Walrus (sign tx)...");
-  const registerTx = flow.register({ deletable: false, epochs: 5, owner: sender });
+  const registerTx = flow.register({ deletable: false, epochs, owner: sender });
   registerTx.setSender(sender);
   const registerResult = await signAndExecute({ transaction: registerTx });
   const registerDigest = (registerResult as any)?.Transaction?.digest ?? (registerResult as any)?.digest ?? "";
@@ -330,10 +331,11 @@ export async function uploadFileToWalrus(params: {
   file: File;
   sender: string;
   signAndExecute: SignAndExecute;
+  epochs?: number;
   onProgress?: (step: string) => void;
 }): Promise<UploadedFile> {
   const data = new Uint8Array(await params.file.arrayBuffer());
-  const { blobId, blobObjectId } = await walrusUpload(data, params.sender, params.signAndExecute, params.onProgress);
+  const { blobId, blobObjectId } = await walrusUpload(data, params.sender, params.signAndExecute, params.onProgress, params.epochs);
 
   // Get current epoch to calculate expiry
   let endEpoch: number | undefined;
