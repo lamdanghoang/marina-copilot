@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useCopilotStore } from "@/store/copilot-store";
+import { processIntent } from "@/lib/api-client";
+import { useTransactionExecution } from "@/hooks/useTransactionExecution";
 
 const TOKENS = ["SUI", "USDC", "USDT", "WETH", "CETUS"];
 
@@ -9,10 +11,38 @@ export default function SwapPage() {
   const [amount, setAmount] = useState("1");
   const [fromToken, setFromToken] = useState("SUI");
   const [toToken, setToToken] = useState("USDC");
-  const sendMessage = useCopilotStore((s) => s.sendMessage);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const walletAddress = useCopilotStore((s) => s.walletAddress);
+  const balances = useCopilotStore((s) => s.balances);
+  const currentPreview = useCopilotStore((s) => s.currentPreview);
+  const { executeTransaction } = useTransactionExecution();
+  const cancelPreview = () => useCopilotStore.setState({ currentPreview: null });
 
-  const handleSwap = () => {
-    sendMessage(`Swap ${amount} ${fromToken} to ${toToken}`);
+  const handleSwap = async () => {
+    if (!walletAddress) return;
+    setError("");
+    setLoading(true);
+    try {
+      const response = await processIntent({
+        message: `Swap ${amount} ${fromToken} to ${toToken}`,
+        walletAddress,
+        conversationHistory: [],
+        balances,
+        contacts: [],
+      });
+      if (response.type === "error") {
+        setError(response.error?.message || "Swap failed");
+      } else if (response.type === "preview" && response.preview) {
+        useCopilotStore.setState({ currentPreview: response.preview });
+      } else if (response.type === "clarification") {
+        setError(response.clarification?.message || "Could not process swap");
+      }
+    } catch (e: any) {
+      setError(e.message || "Failed to get swap route");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,15 +85,36 @@ export default function SwapPage() {
             <TokenSelect value={toToken} onChange={setToToken} fullWidth />
           </div>
 
+          {/* Error */}
+          {error && <p className="text-xs text-red-400">{error}</p>}
+
           {/* Submit */}
           <button
             onClick={handleSwap}
-            disabled={!amount || fromToken === toToken}
+            disabled={!amount || fromToken === toToken || loading || !walletAddress}
             className="w-full rounded-xl bg-[#63f7ff] py-3.5 font-headline font-bold text-sm text-[#002021] hover:bg-cyan-100 transition-all shadow-[0_0_15px_rgba(99,247,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Generate AI Route Path
+            {loading ? "Finding route..." : "Swap"}
           </button>
         </div>
+
+        {/* Inline Preview */}
+        {currentPreview && (
+          <div className="glass-panel rounded-2xl p-4 space-y-3">
+            <div className="space-y-1">
+              {currentPreview.steps.map((s, i) => (
+                <p key={i} className="text-xs text-muted-foreground">{s.description}</p>
+              ))}
+            </div>
+            {currentPreview.risks.length > 0 && (
+              <div className="text-xs text-yellow-400">{currentPreview.risks.map((r) => r.explanation).join("; ")}</div>
+            )}
+            <div className="flex gap-2">
+              <button onClick={() => executeTransaction()} className="flex-1 rounded-xl bg-[#63f7ff] py-2.5 text-sm font-bold text-[#002021]">Confirm</button>
+              <button onClick={cancelPreview} className="flex-1 rounded-xl border border-border/20 py-2.5 text-sm text-muted-foreground">Cancel</button>
+            </div>
+          </div>
+        )}
 
         <p className="text-center text-xs text-muted-foreground">
           Or type in chat: &quot;swap {amount} {fromToken} to {toToken}&quot;
