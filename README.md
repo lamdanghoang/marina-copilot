@@ -49,7 +49,7 @@ Marina: Encrypting with Seal...
 
 ## Demo
 
-🎬 **[Demo Video (YouTube)](https://youtube.com/...)** *(≤ 5 min)*
+🎬 **[Demo Video (YouTube)](https://youtu.be/Rb0jnZM39fc)**
 
 🌐 **[Live App](https://marina-copilot.vercel.app)** — Connect your Sui Testnet wallet and try it
 
@@ -165,7 +165,7 @@ graph TB
         MW[MemWal Account Setup]
     end
 
-    subgraph Backend ["Backend (Express — AWS Lambda)"]
+    subgraph Backend ["Backend (Express — AWS Lightsail)"]
         Orch[Orchestrator]
         IP[Intent Parser + LLM]
         PTB[PTB Compiler]
@@ -213,6 +213,21 @@ graph TB
 ---
 
 ## Future Plans
+
+- **Programmable Time Capsules** — Capsules that contain executable transactions (PTBs), not just messages. Schedule a transfer, swap, or any on-chain action to auto-trigger when the time-lock expires. "Send 10 SUI to Alice on her birthday" becomes a sealed, unstoppable promise on-chain.
+
+```
+┌─────────────────────────────────────────────────────┐
+│  📦 Programmable Capsule                             │
+│                                                      │
+│  🔒 Sealed PTB: "Transfer 10 SUI → 0xAlice"        │
+│  ⏰ Unlocks: Dec 25, 2026                           │
+│  ⚡ Auto-execute on decrypt                          │
+│                                                      │
+│  Encrypted with Seal → Stored on Walrus             │
+│  No one can front-run. No one can stop it.          │
+└─────────────────────────────────────────────────────┘
+```
 
 - **Yield Strategy Recommendations** — AI compares protocol APYs (Cetus, Scallop) and recommends optimal strategies
 - **Voice Commands** — STT/TTS for hands-free interaction
@@ -265,6 +280,15 @@ cd frontend && npm install && cp .env.example .env.local && npm run dev
 - `NEXT_PUBLIC_ENOKI_API_KEY` — Enoki managed zkLogin
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment guide.
+
+---
+
+## Team
+
+| Member | Role | University |
+|--------|------|------------|
+| Dang Hoang Lam | Full Stack Developer | University of Information Technology, Vietnam National University - Ho Chi Minh City (UIT) |
+| Nguyen Ha Phuc | Full Stack Developer  | University of Transport Ho Chi Minh City (UTH) |
 
 ---
 
