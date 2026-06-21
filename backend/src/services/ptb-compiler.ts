@@ -212,16 +212,13 @@ export async function compileSwap(
     );
     transactionBytes = bytes;
     gasEstimate = gas;
-  } catch {
-    // Fallback: serialize a stub transaction if building fails
-    const { bytes, gas } = await buildStubSwapTransaction(
-      walletAddress,
-      intent,
-      estimatedOutput,
-      minimumOutput
-    );
-    transactionBytes = bytes;
-    gasEstimate = gas;
+  } catch (err: any) {
+    return {
+      code: ErrorCode.NO_ROUTE,
+      message: "Swap is currently unavailable on testnet. Liquidity pools may be down.",
+      suggestion: "Try again later or use a different DEX directly.",
+      details: err?.message,
+    } as AppError;
   }
 
   // 6. Build route path for metadata

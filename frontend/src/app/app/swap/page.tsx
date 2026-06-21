@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useCopilotStore } from "@/store/copilot-store";
 
 const TOKENS = ["SUI", "USDC", "USDT", "WETH", "CETUS"];
@@ -10,12 +9,10 @@ export default function SwapPage() {
   const [amount, setAmount] = useState("1");
   const [fromToken, setFromToken] = useState("SUI");
   const [toToken, setToToken] = useState("USDC");
-  const router = useRouter();
   const sendMessage = useCopilotStore((s) => s.sendMessage);
 
   const handleSwap = () => {
     sendMessage(`Swap ${amount} ${fromToken} to ${toToken}`);
-    router.push("/app");
   };
 
   return (
