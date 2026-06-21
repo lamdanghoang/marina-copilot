@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useDAppKit, useCurrentAccount } from "@mysten/dapp-kit-react";
 import { useCopilotStore } from "@/store/copilot-store";
 import { useToast } from "@/components/Toast";
-import { loadFiles } from "@/hooks/useActionExecution";
+import { loadFiles, saveFiles } from "@/hooks/useActionExecution";
 import { HardDrive, Image, FileText, Table, Film, Music, Archive, Code, File } from "lucide-react";
 import type { UploadedFile } from "@/lib/walrus-seal";
 
@@ -48,7 +48,7 @@ export default function FilesPage() {
       // Save to localStorage
       const updated = [...files, result];
       setFiles(updated);
-      localStorage.setItem("marina-copilot-files", JSON.stringify(updated));
+      saveFiles(updated);
 
       toast(`${file.name} uploaded to Walrus!`, "success");
     } catch (e: any) {
@@ -78,7 +78,7 @@ export default function FilesPage() {
       // Update local epochs
       const updated = files.map((f) => f.blobId === file.blobId ? { ...f, epochs: (f.epochs || 3) + 3, endEpoch: (f.endEpoch || 0) + 3 } : f);
       setFiles(updated);
-      localStorage.setItem("marina-copilot-files", JSON.stringify(updated));
+      saveFiles(updated);
       toast("Blob extended by 3 epochs!", "success");
     } catch (e: any) {
       toast(e.message || "Extend failed", "error");

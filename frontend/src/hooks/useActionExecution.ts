@@ -19,12 +19,14 @@ export function loadCapsules(): CapsuleData[] {
   try { return JSON.parse(localStorage.getItem(CAPSULES_KEY) || "[]"); } catch { return []; }
 }
 
-function saveFiles(files: UploadedFile[]) {
-  localStorage.setItem(FILES_KEY, JSON.stringify(files));
+export function saveFiles(files: UploadedFile[]) {
+  const addr = useCopilotStore.getState().walletAddress;
+  localStorage.setItem(addr ? `${FILES_KEY}-${addr}` : FILES_KEY, JSON.stringify(files));
 }
 
 export function loadFiles(): UploadedFile[] {
-  try { return JSON.parse(localStorage.getItem(FILES_KEY) || "[]"); } catch { return []; }
+  const addr = useCopilotStore.getState().walletAddress;
+  try { return JSON.parse(localStorage.getItem(addr ? `${FILES_KEY}-${addr}` : FILES_KEY) || "[]"); } catch { return []; }
 }
 
 export function useActionExecution() {

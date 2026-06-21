@@ -5,6 +5,7 @@ import { useCurrentAccount, useWallets, useDAppKit, useCurrentClient } from "@my
 import { useCopilotStore } from "@/store/copilot-store";
 import { useZkLoginSession } from "@/hooks/useZkLoginSession";
 import { truncateAddress, formatBalance } from "@/lib/formatting";
+import { useRouter } from "next/navigation";
 
 interface WalletButtonProps {
   className?: string;
@@ -18,6 +19,13 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
   const client = useCurrentClient();
   const walletAddress = useCopilotStore((s) => s.walletAddress);
   const { isZkLogin, logout: zkLogout } = useZkLoginSession();
+  const router = useRouter();
+
+  const handleDisconnect = () => {
+    if (isZkLogin) { zkLogout(); }
+    else { (dAppKit as any).disconnectWallet(); useCopilotStore.getState().disconnectWallet(); }
+    router.push("/app");
+  };
   const [balance, setBalance] = useState<string | null>(null);
 
   // Fetch balance
@@ -36,7 +44,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
         <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-400 font-bold tracking-wider">zkLogin</span>
         <span className="font-mono text-xs text-[#63f7ff] cursor-pointer hover:text-white transition-colors" onClick={() => { navigator.clipboard.writeText(walletAddress); }} title="Click to copy">{truncateAddress(walletAddress)}</span>
         <button
-          onClick={zkLogout}
+          onClick={handleDisconnect}
           className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
         >
           Disconnect
@@ -56,7 +64,7 @@ export function WalletButton({ className, variant = "navbar" }: WalletButtonProp
           </div>
         )}
         <button
-          onClick={() => { (dAppKit as any).disconnectWallet(); useCopilotStore.getState().disconnectWallet(); }}
+          onClick={handleDisconnect}
           className="rounded-lg border border-[rgba(0,245,255,0.2)] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
         >
           Disconnect
