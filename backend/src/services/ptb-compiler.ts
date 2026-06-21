@@ -76,9 +76,21 @@ async function getBalance(
   walletAddress: string,
   coinType: string
 ): Promise<bigint> {
-  const client = getSuiClient();
-  const balance = await client.getBalance({ owner: walletAddress, coinType });
-  return BigInt(balance.totalBalance);
+  const graphqlUrl = "https://graphql.testnet.sui.io/graphql";
+  const query = `{
+    address(address: "${walletAddress}") {
+      balance(coinType: "${coinType}") {
+        totalBalance
+      }
+    }
+  }`;
+  const resp = await fetch(graphqlUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  const json: any = await resp.json();
+  return BigInt(json.data?.address?.balance?.totalBalance || "0");
 }
 
 // --- Main Swap Compiler ---
