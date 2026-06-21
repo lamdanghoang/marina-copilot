@@ -27,9 +27,12 @@ export function ChatContainer() {
   const { executeAction } = useActionExecution();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevMsgCount = useRef(0);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    const isNewMessage = messages.length > prevMsgCount.current && prevMsgCount.current > 0;
+    scrollRef.current?.scrollIntoView({ behavior: isNewMessage ? "smooth" : "instant" });
+    prevMsgCount.current = messages.length;
   }, [messages, isProcessing, currentPreview]);
 
   // Execute pending action (capsule/file) when received
